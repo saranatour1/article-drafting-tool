@@ -3,8 +3,9 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import appCss from "../styles.css?url";
 
-// Social crawlers need absolute URLs; set VITE_SITE_URL to the public origin when deployed.
-const siteUrl: string = import.meta.env.VITE_SITE_URL ?? "http://localhost:3000";
+// Social crawlers need absolute URLs. The public origin (same as wrangler.jsonc's
+// route); VITE_SITE_URL overrides it, e.g. for a different host.
+const siteUrl: string = import.meta.env.VITE_SITE_URL ?? "https://drafts.saranatour.dev";
 const title = "Article drafts";
 const description =
   "Write an article once, preview how it looks on dev.to, X Articles and Medium, and copy it for each.";
