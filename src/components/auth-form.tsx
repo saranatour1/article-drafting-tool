@@ -1,4 +1,5 @@
 import { useOauth, useSignInWithGithub } from "@convex-dev/auth/methods/github/react";
+import { track } from "@databuddy/sdk";
 import {
   useSignInWithUsernamePassword,
   useSignUpWithUsernamePassword,
@@ -35,7 +36,10 @@ export function AuthForm() {
       password: String(form.get("password")),
     };
     const result = mode === "signIn" ? await signIn(creds) : await signUp(creds);
-    if (result.status === "complete") return;
+    if (result.status === "complete") {
+      if (mode === "signUp") track("signup_completed", { method: "password" });
+      return;
+    }
     const err = result.userError;
     if (err.error === "OTHER_ERROR") console.error(err.cause);
     setError(MESSAGES[err.error] ?? "Something went wrong. Please try again.");

@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import { DatabuddyProvider } from "@databuddy/sdk/react";
 import type { ReactNode } from "react";
+import { DATABUDDY_CLIENT_ID } from "@/lib/analytics";
 import appCss from "../styles.css?url";
 
 // Social crawlers need absolute URLs. The public origin (same as wrangler.jsonc's
@@ -49,6 +51,12 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        {/* Replay masks text by default, so draft contents stay out of recordings. */}
+        <DatabuddyProvider
+          clientId={DATABUDDY_CLIENT_ID}
+          autocapture={{ webVitals: true, errors: true }}
+          replay
+        />
         <Scripts />
       </body>
     </html>

@@ -1,3 +1,4 @@
+import { track } from "@databuddy/sdk";
 import { Check, Copy, Moon, Sun } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ function PlatformPreview({ platform, title, markdown, tags, author }: Props & { 
     } catch {
       await navigator.clipboard.writeText(out.markdown);
     }
+    track("markdown_copied", { platform: platform.id });
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }

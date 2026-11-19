@@ -46,7 +46,7 @@ export async function loadSession() {
   });
   const token = await session.getToken(); // refreshes and rewrites cookies if near expiry
   if (!(await isAuthenticated(token))) {
-    return { token: null, username: null, drafts: [] };
+    return { token: null, userId: null, username: null, drafts: [] };
   }
   const client = new ConvexHttpClient(convexUrl);
   client.setAuth(token!);
@@ -54,5 +54,5 @@ export async function loadSession() {
     client.query(api.users.me, {}),
     client.query(api.drafts.list, {}),
   ]);
-  return { token, username: me?.username ?? null, drafts };
+  return { token, userId: me?.id ?? null, username: me?.username ?? null, drafts };
 }

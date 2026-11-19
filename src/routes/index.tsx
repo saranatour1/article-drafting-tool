@@ -1,4 +1,5 @@
 import { useAuthActions } from "@convex-dev/auth/react";
+import { identify, reset, track } from "@databuddy/sdk";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useConvexAuth } from "convex/react";
 import { getFunctionName } from "convex/server";
@@ -47,6 +48,11 @@ function Gate() {
   useEffect(() => {
     if (!isLoading && isAuthenticated !== (session.token !== null)) void router.invalidate();
   }, [isLoading, isAuthenticated, session.token, router]);
+
+  // Link this browser's analytics to the signed-in account (its ID and username only).
+  useEffect(() => {
+    if (signedIn && session.userId) identify(session.userId, { name: session.username });
+  }, [signedIn, session.userId, session.username]);
   const drafts = useDrafts(session.token ? session.drafts : undefined);
 
   if (!signedIn) return <AuthForm />;
@@ -98,7 +104,10 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
             variant="ghost"
             size="icon-sm"
             aria-label="Sign out"
-            onClick={() => void signOut()}
+            onClick={() => {
+              reset(); // the next person on this browser starts as a new visitor
+              void signOut();
+            }}
           >
             <LogOut />
           </Button>
@@ -166,6 +175,7 @@ function DraftPane({
     if (!id.current) {
       id.current = crypto.randomUUID();
       onCreated(id.current);
+      track("draft_created");
     }
     pending.current = { clientId: id.current, ...latest.current, updatedAt: Date.now() };
     clearTimeout(timer.current);
