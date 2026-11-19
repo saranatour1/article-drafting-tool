@@ -3,7 +3,6 @@ import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionProps } from "@tiptap/suggestion";
 import {
   Code,
-  Heading1,
   Heading2,
   Heading3,
   Image,
@@ -14,26 +13,30 @@ import {
   Quote,
 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import type { ToolId } from "@/lib/platforms";
 import { cn } from "@/lib/utils";
 
 type Command = {
   title: string;
   icon: LucideIcon;
+  /** Offered when the current platform's editor has any of these tools. */
+  needs: ToolId[];
   run: (chain: ChainedCommands) => ChainedCommands;
 };
 
+// No "Heading 1": the title is the article's H1 on every platform.
 const COMMANDS: Command[] = [
-  { title: "Heading 1", icon: Heading1, run: (c) => c.setNode("heading", { level: 1 }) },
-  { title: "Heading 2", icon: Heading2, run: (c) => c.setNode("heading", { level: 2 }) },
-  { title: "Heading 3", icon: Heading3, run: (c) => c.setNode("heading", { level: 3 }) },
-  { title: "Bullet list", icon: List, run: (c) => c.toggleBulletList() },
-  { title: "Numbered list", icon: ListOrdered, run: (c) => c.toggleOrderedList() },
-  { title: "Quote", icon: Quote, run: (c) => c.toggleBlockquote() },
-  { title: "Code block", icon: Code, run: (c) => c.toggleCodeBlock() },
-  { title: "Divider", icon: Minus, run: (c) => c.setHorizontalRule() },
+  { title: "Heading", icon: Heading2, needs: ["heading", "style"], run: (c) => c.setNode("heading", { level: 2 }) },
+  { title: "Subheading", icon: Heading3, needs: ["heading", "style"], run: (c) => c.setNode("heading", { level: 3 }) },
+  { title: "Bullet list", icon: List, needs: ["bulletList"], run: (c) => c.toggleBulletList() },
+  { title: "Numbered list", icon: ListOrdered, needs: ["orderedList"], run: (c) => c.toggleOrderedList() },
+  { title: "Quote", icon: Quote, needs: ["quote"], run: (c) => c.toggleBlockquote() },
+  { title: "Code block", icon: Code, needs: ["codeBlock"], run: (c) => c.toggleCodeBlock() },
+  { title: "Divider", icon: Minus, needs: ["divider"], run: (c) => c.setHorizontalRule() },
   {
     title: "Image",
     icon: Image,
+    needs: ["image"],
     run: (c) => {
       const src = window.prompt("Image URL");
       return src ? c.setImage({ src }) : c;
@@ -93,16 +96,23 @@ const CommandList = forwardRef<ListHandle, SuggestionProps<Command>>(
   },
 );
 
-/** Type "/" anywhere to insert a block. */
-export const SlashCommand = Extension.create({
+/** Type "/" anywhere to insert a block, from the tools the current platform has. */
+export const SlashCommand = Extension.create<{ tools: () => ToolId[] }>({
   name: "slashCommand",
+  addOptions: () => ({ tools: () => [] }),
   addProseMirrorPlugins() {
     return [
       Suggestion<Command>({
         editor: this.editor as Editor,
         char: "/",
-        items: ({ query }) =>
-          COMMANDS.filter((c) => c.title.toLowerCase().includes(query.toLowerCase())),
+        items: ({ query }) => {
+          const tools = this.options.tools();
+          return COMMANDS.filter(
+            (c) =>
+              c.needs.some((t) => tools.includes(t)) &&
+              c.title.toLowerCase().includes(query.toLowerCase()),
+          );
+        },
         command: ({ editor, range, props }) =>
           props.run(editor.chain().focus().deleteRange(range)).run(),
         render: () => {

@@ -9,9 +9,13 @@ type Props = { title: string; markdown: string; tags: string[]; author: string }
 // dev.to colors each tag from its own database; a stable hue per name stands in.
 const tagHue = (tag: string) => [...tag].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
-export function Preview(props: Props) {
+export function Preview({
+  platformId,
+  onPlatformChange,
+  ...props
+}: Props & { platformId: string; onPlatformChange: (id: string) => void }) {
   return (
-    <Tabs defaultValue={PLATFORMS[0].id} className="gap-4">
+    <Tabs value={platformId} onValueChange={onPlatformChange} className="gap-4">
       <TabsList>
         {PLATFORMS.map((p) => (
           <TabsTrigger key={p.id} value={p.id}>

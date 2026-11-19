@@ -2,6 +2,7 @@ import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
 import {
   Bold,
+  ChevronDown,
   Code,
   EllipsisVertical,
   Heading,
@@ -26,12 +27,15 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { type Platform, type ToolId, editorFor } from "@/lib/platforms";
 
 type Item = {
   label: string;
@@ -63,17 +67,19 @@ function heading(editor: Editor) {
   else chain(editor).setParagraph().run();
 }
 
-const ITEMS: Item[] = [
-  { label: "Bold", keys: "Mod-B", icon: Bold, active: "bold", run: (e) => chain(e).toggleBold().run() },
-  { label: "Italic", keys: "Mod-I", icon: Italic, active: "italic", run: (e) => chain(e).toggleItalic().run() },
-  { label: "Link", icon: Link, active: "link", run: link },
-  { label: "Numbered list", keys: "Mod-Shift-7", icon: ListOrdered, active: "orderedList", run: (e) => chain(e).toggleOrderedList().run() },
-  { label: "Bullet list", keys: "Mod-Shift-8", icon: List, active: "bulletList", run: (e) => chain(e).toggleBulletList().run() },
-  { label: "Heading: text → H2 → H3", icon: Heading, active: "heading", run: heading },
-  { label: "Quote", keys: "Mod-Shift-B", icon: Quote, active: "blockquote", run: (e) => chain(e).toggleBlockquote().run() },
-  { label: "Inline code", keys: "Mod-E", icon: Code, active: "code", run: (e) => chain(e).toggleCode().run() },
-  { label: "Code block", keys: "Mod-Alt-C", icon: SquareCode, active: "codeBlock", run: (e) => chain(e).toggleCodeBlock().run() },
-  {
+const TOOLS: Record<Exclude<ToolId, "style">, Item> = {
+  bold: { label: "Bold", keys: "Mod-B", icon: Bold, active: "bold", run: (e) => chain(e).toggleBold().run() },
+  italic: { label: "Italic", keys: "Mod-I", icon: Italic, active: "italic", run: (e) => chain(e).toggleItalic().run() },
+  strike: { label: "Strikethrough", keys: "Mod-Shift-S", icon: Strikethrough, active: "strike", run: (e) => chain(e).toggleStrike().run() },
+  link: { label: "Link", icon: Link, active: "link", run: link },
+  orderedList: { label: "Numbered list", keys: "Mod-Shift-7", icon: ListOrdered, active: "orderedList", run: (e) => chain(e).toggleOrderedList().run() },
+  bulletList: { label: "Bullet list", keys: "Mod-Shift-8", icon: List, active: "bulletList", run: (e) => chain(e).toggleBulletList().run() },
+  heading: { label: "Heading: text → H2 → H3", icon: Heading, active: "heading", run: heading },
+  quote: { label: "Quote", keys: "Mod-Shift-B", icon: Quote, active: "blockquote", run: (e) => chain(e).toggleBlockquote().run() },
+  code: { label: "Inline code", keys: "Mod-E", icon: Code, active: "code", run: (e) => chain(e).toggleCode().run() },
+  codeBlock: { label: "Code block", keys: "Mod-Alt-C", icon: SquareCode, active: "codeBlock", run: (e) => chain(e).toggleCodeBlock().run() },
+  divider: { label: "Divider", icon: Minus, run: (e) => chain(e).setHorizontalRule().run() },
+  image: {
     label: "Image from a URL",
     icon: Image,
     run: (e) => {
@@ -81,13 +87,18 @@ const ITEMS: Item[] = [
       if (src) chain(e).setImage({ src }).run();
     },
   },
-];
+};
 
-const MORE: Item[] = [
-  { label: "Strikethrough", keys: "Mod-Shift-S", icon: Strikethrough, run: (e) => chain(e).toggleStrike().run() },
-  { label: "Divider", icon: Minus, run: (e) => chain(e).setHorizontalRule().run() },
+const HISTORY: Item[] = [
   { label: "Undo", keys: "Mod-Z", icon: Undo2, run: (e) => chain(e).undo().run() },
   { label: "Redo", keys: "Mod-Shift-Z", icon: Redo2, run: (e) => chain(e).redo().run() },
+];
+
+// LinkedIn-style Style menu. Heading and Subheading are H2 and H3, the two sizes every site keeps.
+const STYLES = [
+  { value: "normal", label: "Normal", run: (e: Editor) => chain(e).setParagraph().run() },
+  { value: "heading", label: "Heading", run: (e: Editor) => chain(e).setNode("heading", { level: 2 }).run() },
+  { value: "subheading", label: "Subheading", run: (e: Editor) => chain(e).setNode("heading", { level: 3 }).run() },
 ];
 
 const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -96,27 +107,58 @@ const shortcut = (keys: string) =>
     ? keys.replace("Mod", "⌘").replace("Shift", "⇧").replace("Alt", "⌥").replaceAll("-", "")
     : keys.replace("Mod", "Ctrl").replaceAll("-", "+");
 
-/** dev.to-style formatting bar. Buttons light up for whatever is under the cursor. */
-export function EditorToolbar({ editor }: { editor: Editor | null }) {
+// Return focus to the text when a menu closes, not to its button, so typing carries on.
+const refocus = (editor: Editor | null) => (e: Event) => {
+  e.preventDefault();
+  editor?.commands.focus();
+};
+
+/** The selected platform's formatting bar. Buttons light up for whatever is under the cursor. */
+export function EditorToolbar({ editor, platform }: { editor: Editor | null; platform: Platform }) {
+  const spec = editorFor(platform);
   const active = useEditorState({
     editor,
     selector: ({ editor }) =>
       editor && {
-        ...Object.fromEntries(ITEMS.filter((i) => i.active).map((i) => [i.active, editor.isActive(i.active!)])),
+        ...Object.fromEntries(
+          Object.values(TOOLS)
+            .filter((i) => i.active)
+            .map((i) => [i.active, editor.isActive(i.active!)]),
+        ),
         h2: editor.isActive("heading", { level: 2 }),
         h3: editor.isActive("heading", { level: 3 }),
       },
   });
-  const icon = (item: Item) =>
-    item.run === heading && active?.h2 ? Heading2 : item.run === heading && active?.h3 ? Heading3 : item.icon;
+  const style = active?.h2 ? "heading" : active?.h3 ? "subheading" : "normal";
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div role="toolbar" aria-label="Formatting" className="flex items-center gap-0.5">
-        {ITEMS.map((item) => {
-          const Icon = icon(item);
+      <div role="toolbar" aria-label={`${platform.label} formatting`} className="flex items-center gap-0.5">
+        {spec.tools.map((id) => {
+          if (id === "style") {
+            return (
+              <DropdownMenu key={id}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="lg" disabled={!editor} className="mr-1 font-semibold">
+                    Style <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" onCloseAutoFocus={refocus(editor)}>
+                  <DropdownMenuRadioGroup value={style}>
+                    {STYLES.map((s) => (
+                      <DropdownMenuRadioItem key={s.value} value={s.value} onSelect={() => editor && s.run(editor)}>
+                        {s.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+          const item = TOOLS[id];
+          const Icon = id === "heading" && active?.h2 ? Heading2 : id === "heading" && active?.h3 ? Heading3 : item.icon;
           return (
-            <Tooltip key={item.label}>
+            <Tooltip key={id}>
               <TooltipTrigger asChild>
                 <Toggle
                   size="lg"
@@ -135,21 +177,15 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
             </Tooltip>
           );
         })}
+        <span className="ml-auto pr-1 text-xs whitespace-nowrap text-muted-foreground">{platform.label} tools</span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-lg" aria-label="More formatting" className="ml-auto" disabled={!editor}>
+            <Button variant="ghost" size="icon-lg" aria-label="More formatting" disabled={!editor}>
               <EllipsisVertical />
             </Button>
           </DropdownMenuTrigger>
-          {/* Return focus to the text, not the ⋮ button, so typing carries on. */}
-          <DropdownMenuContent
-            align="end"
-            onCloseAutoFocus={(e) => {
-              e.preventDefault();
-              editor?.commands.focus();
-            }}
-          >
-            {MORE.map((item) => (
+          <DropdownMenuContent align="end" onCloseAutoFocus={refocus(editor)}>
+            {[...(spec.more ?? []).map((id) => TOOLS[id as Exclude<ToolId, "style">]), ...HISTORY].map((item) => (
               <DropdownMenuItem key={item.label} onSelect={() => editor && item.run(editor)}>
                 <item.icon />
                 {item.label}

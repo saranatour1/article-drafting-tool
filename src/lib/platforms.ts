@@ -15,7 +15,42 @@ export type Platform = {
   dark?: boolean;
   /** Byline next to the author, e.g. dev.to's "Posted on Nov 19". */
   byline?: (date: string) => string;
+  /** The tools this site's own editor offers; the editor switches to them with the tab. */
+  editor?: EditorSpec;
 };
+
+/** A formatting control. `heading` is dev.to's H button; `style` is a Normal/Heading/Subheading menu. */
+export type ToolId =
+  | "style"
+  | "heading"
+  | "bold"
+  | "italic"
+  | "strike"
+  | "link"
+  | "code"
+  | "codeBlock"
+  | "orderedList"
+  | "bulletList"
+  | "quote"
+  | "divider"
+  | "image";
+
+export type EditorSpec = {
+  /** The toolbar, in the site's own order. */
+  tools: ToolId[];
+  /** Extra tools in the ⋮ menu (Undo and Redo are always there). */
+  more?: ToolId[];
+  /** Shows the tag field, with this limit. */
+  maxTags?: number;
+};
+
+// Until a site's own editor has been matched, it gets these tools and no tag field.
+export const DEFAULT_EDITOR: EditorSpec = {
+  tools: ["bold", "italic", "link", "orderedList", "bulletList", "heading", "quote", "code", "codeBlock", "image"],
+  more: ["strike", "divider"],
+};
+
+export const editorFor = (platform: Platform) => platform.editor ?? DEFAULT_EDITOR;
 
 // Add a platform by adding an entry here and a `.preview-<id>` block in styles.css.
 export const PLATFORMS: Platform[] = [
@@ -31,6 +66,7 @@ export const PLATFORMS: Platform[] = [
     tip: "Paste into dev.to's editor. It reads the markdown, and the front matter sets the title as a draft.",
     dark: true,
     byline: (date) => `Posted on ${date}`,
+    editor: { ...DEFAULT_EDITOR, maxTags: 4 },
   },
   {
     id: "x",
@@ -49,6 +85,10 @@ export const PLATFORMS: Platform[] = [
     label: "LinkedIn",
     heading: (d) => (d <= 2 ? 2 : 3), // its Style menu offers two heading sizes
     tip: "Paste into a LinkedIn article (Write article); it reads the rich text. Title and cover image have their own fields.",
+    // LinkedIn's article toolbar, in its order (its embed button has no markdown equivalent).
+    editor: {
+      tools: ["style", "bold", "italic", "bulletList", "orderedList", "quote", "codeBlock", "divider", "link", "image"],
+    },
   },
 ];
 
