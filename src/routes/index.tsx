@@ -9,6 +9,7 @@ import { AuthForm } from "@/components/auth-form";
 import { Editor } from "@/components/editor";
 import { Preview } from "@/components/preview";
 import { TagInput } from "@/components/tag-input";
+import { PLATFORMS, editorFor } from "@/lib/platforms";
 import { Button } from "@/components/ui/button";
 import { convex } from "@/lib/convex";
 import { type Draft, getDraftStore, useDrafts } from "@/lib/drafts";
@@ -56,6 +57,8 @@ function Gate() {
 function Workspace({ drafts, username }: { drafts: Draft[]; username: string | null }) {
   const [selectedId, setSelectedId] = useState<string | null>(drafts[0]?.clientId ?? null);
   const [paneKey, setPaneKey] = useState(0);
+  // Which platform you're writing for: picks the preview tab and the editor's tools.
+  const [platformId, setPlatformId] = useState(PLATFORMS[0].id);
   const { signOut } = useAuthActions();
 
   const open = (id: string | null) => {
@@ -104,6 +107,8 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
       <DraftPane
         key={paneKey}
         author={username ?? "You"}
+        platformId={platformId}
+        onPlatformChange={setPlatformId}
         draft={drafts.find((d) => d.clientId === selectedId)}
         onCreated={setSelectedId}
         onDeleted={() => open(drafts.find((d) => d.clientId !== selectedId)?.clientId ?? null)}
@@ -115,11 +120,15 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
 /** Editor + previews for one draft. Remounted when switching drafts. */
 function DraftPane({
   author,
+  platformId,
+  onPlatformChange,
   draft,
   onCreated,
   onDeleted,
 }: {
   author: string;
+  platformId: string;
+  onPlatformChange: (id: string) => void;
   draft: Draft | undefined;
   onCreated: (clientId: string) => void;
   onDeleted: () => void;
@@ -131,6 +140,8 @@ function DraftPane({
   });
   const [view, setView] = useState(latest.current);
   const preview = useDeferredValue(view);
+  const platform = PLATFORMS.find((p) => p.id === platformId) ?? PLATFORMS[0];
+  const maxTags = editorFor(platform).maxTags;
   const id = useRef(draft?.clientId);
   const pending = useRef<Draft>(undefined);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -185,13 +196,25 @@ function DraftPane({
             </Button>
           )}
         </div>
-        <div className="mb-6">
-          <TagInput tags={view.tags} onChange={(tags) => change({ tags })} />
+        {/* Only platforms with tags show the field; the draft keeps its tags either way. */}
+        <div className="mb-6 min-h-7">
+          {maxTags && <TagInput tags={view.tags} max={maxTags} onChange={(tags) => change({ tags })} />}
         </div>
-        <Editor initialMarkdown={latest.current.markdown} onChange={(markdown) => change({ markdown })} />
+        <Editor
+          initialMarkdown={latest.current.markdown}
+          onChange={(markdown) => change({ markdown })}
+          platform={platform}
+        />
       </section>
       <section className="overflow-y-auto bg-muted/40 px-6 py-8 lg:px-8">
-        <Preview title={preview.title} markdown={preview.markdown} tags={preview.tags} author={author} />
+        <Preview
+          platformId={platform.id}
+          onPlatformChange={onPlatformChange}
+          title={preview.title}
+          markdown={preview.markdown}
+          tags={preview.tags}
+          author={author}
+        />
       </section>
     </>
   );

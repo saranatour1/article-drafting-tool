@@ -1,7 +1,7 @@
 // Run: node --test src/lib/platforms.test.ts
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { PLATFORMS, renderForPlatform } from "./platforms.ts";
+import { DEFAULT_EDITOR, PLATFORMS, editorFor, renderForPlatform } from "./platforms.ts";
 
 const platform = (id: string) => PLATFORMS.find((p) => p.id === id)!;
 const md = "# Big\n\nIntro\n\n### Small\n\n```\n# not a heading\n```\n\n<img src=x onerror=alert(1)>\n";
@@ -35,4 +35,15 @@ test("raw HTML is escaped in the preview", () => {
   const { html } = renderForPlatform(platform("medium"), "T", md);
   assert.ok(!html.includes("<img src=x"));
   assert.ok(html.includes("&lt;img src=x"));
+});
+
+test("editor tools follow the platform", () => {
+  assert.equal(editorFor(platform("devto")).maxTags, 4);
+  assert.ok(editorFor(platform("devto")).tools.includes("heading"));
+  const linkedin = editorFor(platform("linkedin"));
+  assert.equal(linkedin.tools[0], "style");
+  assert.equal(linkedin.maxTags, undefined);
+  assert.ok(!linkedin.tools.includes("code")); // LinkedIn has no inline code
+  // Sites we haven't matched yet get the default tools and no tag field.
+  assert.equal(editorFor(platform("medium")), DEFAULT_EDITOR);
 });
