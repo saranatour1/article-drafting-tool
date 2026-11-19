@@ -1,0 +1,52 @@
+{
+  "name": "article-drafting-tool",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "convex dev --start \"vite dev\"",
+    "build": "vite build",
+    "start": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/lib/*.test.ts",
+    "og": "\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" --headless --hide-scrollbars --window-size=1200,630 --user-data-dir=\"$(mktemp -d)\" --screenshot=public/og.png \"file://$PWD/scripts/og.html\""
+  },
+  "dependencies": {
+    "@convex-dev/auth": "2.0.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@tanstack/convex-db-collection": "1.0.0-rc.1.5",
+    "@tanstack/offline-transactions": "1.2.1",
+    "@tanstack/react-db": "1.0.0-rc.1.5",
+    "@tanstack/react-router": "1.170.46",
+    "@tanstack/react-start": "1.169.5",
+    "@tiptap/core": "3.34.0",
+    "@tiptap/extension-image": "3.34.0",
+    "@tiptap/extensions": "3.34.0",
+    "@tiptap/markdown": "3.34.0",
+    "@tiptap/pm": "3.34.0",
+    "@tiptap/react": "3.34.0",
+    "@tiptap/starter-kit": "3.34.0",
+    "@tiptap/suggestion": "3.34.0",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.2",
+    "convex": "1.51.0",
+    "lucide-react": "^1.75.0",
+    "marked": "18.2.1",
+    "radix-ui": "^1.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "shadcn": "^4.23.0",
+    "tw-animate-css": "^1.4.0"
+  },
+  "devDependencies": {
+    "@floating-ui/dom": "^1.8.0",
+    "@tailwindcss/typography": "0.5.20",
+    "@tailwindcss/vite": "4.3.5",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "6.3.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "vite": "8.3.8"
+  }
+}

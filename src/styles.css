@@ -1,0 +1,282 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', sans-serif;
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.205 0 0);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --accent: oklch(0.97 0 0);
+    --accent-foreground: oklch(0.205 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+    --input: oklch(0.922 0 0);
+    --ring: oklch(0.708 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.985 0 0);
+    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-primary: oklch(0.205 0 0);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.97 0 0);
+    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-border: oklch(0.922 0 0);
+    --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    --card: oklch(0.205 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    --popover: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    --primary: oklch(0.922 0 0);
+    --primary-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.269 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    --muted: oklch(0.269 0 0);
+    --muted-foreground: oklch(0.708 0 0);
+    --accent: oklch(0.269 0 0);
+    --accent-foreground: oklch(0.985 0 0);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: oklch(0.556 0 0);
+    --chart-1: oklch(0.87 0 0);
+    --chart-2: oklch(0.556 0 0);
+    --chart-3: oklch(0.439 0 0);
+    --chart-4: oklch(0.371 0 0);
+    --chart-5: oklch(0.269 0 0);
+    --sidebar: oklch(0.205 0 0);
+    --sidebar-foreground: oklch(0.985 0 0);
+    --sidebar-primary: oklch(0.488 0.243 264.376);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.269 0 0);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-border: oklch(1 0 0 / 10%);
+    --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+@plugin "@tailwindcss/typography";
+
+/* TipTap placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted-foreground);
+}
+
+/*
+ * Platform previews. `.preview-page` is the site's page around the article
+ * card (`.preview`); `.preview-<id>` gives each site its look, layered on the
+ * typography plugin's `prose` defaults.
+ */
+.preview-page {
+  @apply rounded-lg border bg-white shadow-sm;
+  container-type: inline-size;
+}
+.preview {
+  @apply prose max-w-none p-8;
+  & img { max-width: 100%; }
+}
+
+/*
+ * dev.to: colors and sizes from its Crayons article page. Light is its default
+ * theme, dark its "ten-x-hacker" theme; code blocks are dark in both.
+ */
+.preview-devto {
+  --page: #f5f5f5;
+  --card: #fff;
+  --ring: rgb(23 23 23 / 0.1);
+  --text: #171717;
+  --muted: #717171;
+  --link: #3b49df;
+  --line: #d6d6d7;
+  --code-inline: rgb(0 0 0 / 0.1);
+  --tag-text: #3d3d3d;
+  padding: 0.75rem;
+  border: 0;
+  box-shadow: none;
+  background: var(--page);
+  &[data-theme="dark"] {
+    --page: #000;
+    --card: #141311;
+    --ring: rgb(255 255 255 / 0.1);
+    --text: #f9f9f9;
+    --muted: #a3a3a3;
+    --link: #818cf8;
+    --line: #3d3d3d;
+    --code-inline: rgb(255 255 255 / 0.1);
+    --tag-text: #d4d4d4;
+  }
+  & .preview {
+    --tw-prose-body: var(--text);
+    --tw-prose-headings: var(--text);
+    --tw-prose-bold: var(--text);
+    --tw-prose-links: var(--link);
+    --tw-prose-bullets: var(--text);
+    --tw-prose-counters: var(--text);
+    --tw-prose-quotes: var(--text);
+    --tw-prose-quote-borders: var(--line);
+    --tw-prose-hr: var(--line);
+    --tw-prose-code: var(--text);
+    padding: 2rem 1.25rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 1px var(--ring);
+    background: var(--card);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 1.1875rem;
+    line-height: 1.5;
+  }
+  & .preview-byline { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; line-height: 1.25; }
+  & .preview-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: #a9e0b9;
+    color: #171717;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  & .preview-author { font-size: 1rem; font-weight: 700; }
+  & .preview-date { font-size: 0.75rem; color: var(--muted); }
+  & .preview header { margin-bottom: 2rem; }
+  & .preview-title { margin: 0 0 0.5rem; color: var(--text); font-size: 1.875rem; font-weight: 800; line-height: 1.25; }
+  & .preview-tags { display: flex; flex-wrap: wrap; gap: 0.125rem; margin-left: -0.5rem; }
+  & .preview-tag { padding: 0.25rem 0.5rem; border-radius: 0.375rem; color: var(--tag-text); font-size: 1rem; line-height: 1.5; }
+  & .preview-tag-hash { color: hsl(var(--tag-hue) 75% 55%); }
+  & .preview-body {
+    & p, & ul, & ol, & blockquote, & pre { margin: 0 0 1.25rem; }
+    & li, & li p { margin: 0; }
+    & h2, & h3, & h4 { margin: 1.5em 0 0.5em; font-weight: 700; line-height: 1.25; }
+    & h2 { font-size: 1.875rem; }
+    & h3 { font-size: 1.5rem; }
+    & h4 { font-size: 1.25rem; }
+    & a { font-weight: inherit; text-decoration: none; }
+    & img { margin: 0 auto; }
+    & blockquote { padding-left: 1rem; border-left: 0.25rem solid var(--line); font-style: normal; font-weight: inherit; }
+    & blockquote p::before, & blockquote p::after { content: none; }
+    & pre { padding: 1rem; border-radius: 0.375rem; background: #08090a; color: #f8f8f2; font-size: 0.875rem; line-height: 1.5; }
+    & :not(pre) > code { padding: 0.1em 0.25em; border-radius: 0.375rem; background: var(--code-inline); font-size: 0.875em; font-weight: 400; }
+    & :not(pre) > code::before, & :not(pre) > code::after { content: none; }
+  }
+}
+/* dev.to's tablet and desktop sizes, by the width the card actually has */
+@container (min-width: 640px) {
+  .preview-devto .preview { padding: 2rem 4rem; font-size: 1.25rem; }
+  .preview-devto .preview-title { font-size: 2.25rem; }
+}
+@container (min-width: 860px) {
+  .preview-devto .preview-title { font-size: 3rem; }
+}
+
+.preview-x .preview {
+  --tw-prose-body: #0f1419;
+  --tw-prose-headings: #0f1419;
+  --tw-prose-links: #1d9bf0;
+  --tw-prose-quote-borders: #cfd9de;
+  font-family: "TwitterChirp", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  & .preview-title { font-size: 2.25rem; font-weight: 800; line-height: 1.2; }
+  & h2 { font-size: 1.5rem; font-weight: 800; }
+  & h3 { font-size: 1.2rem; font-weight: 700; }
+  & blockquote { font-style: normal; }
+}
+
+.preview-medium .preview {
+  --tw-prose-body: #242424;
+  --tw-prose-headings: #242424;
+  --tw-prose-links: #242424;
+  --tw-prose-quote-borders: #242424;
+  font-family: "Source Serif Pro", Georgia, Cambria, "Times New Roman", Times, serif;
+  font-size: 20px;
+  line-height: 1.6;
+  & .preview-title,
+  & h2,
+  & h3 { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -0.016em; }
+  & .preview-title { font-size: 2.6rem; font-weight: 700; line-height: 1.2; }
+  & h2 { font-size: 1.5rem; font-weight: 700; }
+  & h3 { font-size: 1.25rem; font-weight: 700; }
+  & a { text-decoration: underline; }
+  & blockquote { border-left-width: 3px; font-style: italic; }
+  & pre { background: #f2f2f2; color: #242424; font-size: 16px; border-radius: 4px; }
+  & :not(pre) > code { background: #f2f2f2; padding: 0.15em 0.3em; border-radius: 3px; font-size: 0.75em; font-weight: 400; }
+  & :not(pre) > code::before, & :not(pre) > code::after { content: none; }
+}
