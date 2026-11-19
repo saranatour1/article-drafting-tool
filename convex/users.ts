@@ -20,12 +20,12 @@ export const createUser = internalMutation({
 
 export const me = query({
   args: {},
-  returns: v.union(v.null(), v.object({ username: v.union(v.string(), v.null()) })),
+  returns: v.union(v.null(), v.object({ id: v.id("users"), username: v.union(v.string(), v.null()) })),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (userId === null) return null;
     const username = await ctx.runQuery(components.authUsername.public.getUsername, { userId });
     const user = await ctx.db.get("users", userId);
-    return { username: username ?? user?.name ?? null };
+    return { id: userId, username: username ?? user?.name ?? null };
   },
 });

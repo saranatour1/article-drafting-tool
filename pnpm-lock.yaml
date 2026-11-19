@@ -169,6 +169,9 @@ importers:
       '@convex-dev/auth':
         specifier: 2.0.0
         version: 2.0.0(@standard-schema/spec@1.1.0)(convex@1.51.0(react@19.3.1))(prettier@3.10.1)(react@19.3.1)(typescript@6.0.3)(zod@4.6.7)
+      '@databuddy/sdk':
+        specifier: 3.5.3
+        version: 3.5.3(react@19.3.1)
       '@fontsource-variable/geist':
         specifier: ^5.3.0
         version: 5.3.0
@@ -521,6 +524,17 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@databuddy/sdk@3.5.3':
+    resolution: {integrity: sha512-pAro3lR74ltGQL9mMF4Hi1jtxAdzGSAZQhQx0F3c0UaFvnKcJ3uVBoIIH5Zz5vY9I2IrvFHeJ/WspcJ+KTh5zw==}
+    peerDependencies:
+      react: '>=18'
+      vue: '>=3.5'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      vue:
+        optional: true
 
   '@dotenvx/dotenvx@1.75.1':
     resolution: {integrity: sha512-/BITOC9dmS/edY2zQwZNicQ059O6RKabtQfyEafV0nGtfYRNHYy1DIPiYVcov40+tob9hfmBnbR963dS+EQ1DQ==}
@@ -4129,6 +4143,10 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@databuddy/sdk@3.5.3(react@19.3.1)':
+    optionalDependencies:
+      react: 19.3.1
 
   '@dotenvx/dotenvx@1.75.1':
     dependencies:
