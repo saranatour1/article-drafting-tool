@@ -31,7 +31,7 @@ The Convex backend is a local, account-less deployment (`.env.local`). To move i
 
 - Logo/favicon: `public/logo.svg`. Open Graph + Twitter card tags live in `src/routes/__root.tsx`.
 - Link-preview image: `public/og.png`, rendered from `scripts/og.html` with `pnpm og` (headless Chrome).
-- Crawlers need absolute URLs, so set `VITE_SITE_URL` (e.g. in `.env.local` or your host's env) to the public origin once deployed. It defaults to `http://localhost:3000`.
+- Link previews use `https://drafts.saranatour.dev` (default in `src/routes/__root.tsx`); set `VITE_SITE_URL` in the build environment to override it. No env file is committed: `.env*` is git-ignored.
 
 ## How it fits together
 

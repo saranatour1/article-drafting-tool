@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "article-drafting-tool",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "routes": [{ "pattern": "drafts.saranatour.dev", "custom_domain": true }],
+  // Lets Workers Builds publish PR branches with `wrangler preview`; settings
+  // left out here (assets, compatibility, observability) come from the top level.
+  "previews": {},
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "persist": true
+    },
+    // wrangler's name for issue detection (`issue_detection` isn't in its schema)
+    "issues": {
+      "enabled": true
+    }
+  }
+}

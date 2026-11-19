@@ -1,4 +1,4 @@
-.env.local
+.env*
 node_modules
 dist
 .tanstack
@@ -6,3 +6,4 @@ dist
 .claude/skills/
 .agents/
 .DS_Store
+.wrangler
