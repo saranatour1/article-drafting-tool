@@ -44,6 +44,12 @@ export const PLATFORMS: Platform[] = [
     heading: (d) => (d <= 2 ? 2 : 3), // Medium has a big and a small heading
     tip: "Paste into a new Medium story; it reads the rich text. Type the title first.",
   },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    heading: (d) => (d <= 2 ? 2 : 3), // its Style menu offers two heading sizes
+    tip: "Paste into a LinkedIn article (Write article); it reads the rich text. Title and cover image have their own fields.",
+  },
 ];
 
 // Escape raw HTML in the markdown: it may have been pasted in from the web.

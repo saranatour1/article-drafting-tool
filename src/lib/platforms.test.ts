@@ -22,8 +22,8 @@ test("dev.to tags: normalized, deduped, at most 4, in front matter", () => {
   assert.deepEqual(renderForPlatform(platform("medium"), "T", "Hi", ["convex"]).tags, []);
 });
 
-test("Medium / X: two heading sizes", () => {
-  for (const id of ["medium", "x"]) {
+test("Medium / X / LinkedIn: two heading sizes", () => {
+  for (const id of ["medium", "x", "linkedin"]) {
     const out = renderForPlatform(platform(id), "T", md);
     assert.match(out.markdown, /^## Big$/m);
     assert.match(out.markdown, /^### Small$/m);

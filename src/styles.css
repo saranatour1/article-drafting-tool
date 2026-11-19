@@ -280,3 +280,20 @@
   & :not(pre) > code { background: #f2f2f2; padding: 0.15em 0.3em; border-radius: 3px; font-size: 0.75em; font-weight: 400; }
   & :not(pre) > code::before, & :not(pre) > code::after { content: none; }
 }
+
+/* LinkedIn article: approximation (system font, LinkedIn blue links) until we have its article page */
+.preview-linkedin .preview {
+  --tw-prose-body: rgb(0 0 0 / 0.9);
+  --tw-prose-headings: rgb(0 0 0 / 0.9);
+  --tw-prose-links: #0a66c2;
+  --tw-prose-quote-borders: rgb(0 0 0 / 0.3);
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Fira Sans", Ubuntu, Oxygen, Cantarell, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  & .preview-title { font-size: 2.25rem; font-weight: 600; line-height: 1.25; }
+  & h2 { font-size: 1.5rem; font-weight: 600; }
+  & h3 { font-size: 1.25rem; font-weight: 600; }
+  & a { font-weight: 600; text-decoration: none; }
+  & blockquote { font-style: normal; }
+  & pre { background: #f4f2ee; color: rgb(0 0 0 / 0.9); border-radius: 0.5rem; }
+}
