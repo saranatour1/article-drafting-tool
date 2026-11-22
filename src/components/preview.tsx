@@ -4,6 +4,7 @@ import { type CSSProperties, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PLATFORMS, type Platform, renderForPlatform } from "@/lib/platforms";
+import { WritingCheck } from "./writing-check";
 
 type Props = { title: string; markdown: string; tags: string[]; author: string };
 
@@ -16,20 +17,23 @@ export function Preview({
   ...props
 }: Props & { platformId: string; onPlatformChange: (id: string) => void }) {
   return (
-    <Tabs value={platformId} onValueChange={onPlatformChange} className="gap-4">
-      <TabsList>
+    <>
+      <WritingCheck title={props.title} markdown={props.markdown} />
+      <Tabs value={platformId} onValueChange={onPlatformChange} className="gap-4">
+        <TabsList>
+          {PLATFORMS.map((p) => (
+            <TabsTrigger key={p.id} value={p.id}>
+              {p.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {PLATFORMS.map((p) => (
-          <TabsTrigger key={p.id} value={p.id}>
-            {p.label}
-          </TabsTrigger>
+          <TabsContent key={p.id} value={p.id}>
+            <PlatformPreview platform={p} {...props} />
+          </TabsContent>
         ))}
-      </TabsList>
-      {PLATFORMS.map((p) => (
-        <TabsContent key={p.id} value={p.id}>
-          <PlatformPreview platform={p} {...props} />
-        </TabsContent>
-      ))}
-    </Tabs>
+      </Tabs>
+    </>
   );
 }
 
