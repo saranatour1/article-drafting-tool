@@ -15,6 +15,8 @@ export type Draft = {
   title: string;
   markdown: string;
   tags: string[];
+  /** An idea moves to the drafts when you start writing it up. */
+  stage: "idea" | "draft";
   updatedAt: number;
 };
 
@@ -41,9 +43,9 @@ function createDraftStore() {
         mutation: api.drafts.save,
         collections: [drafts],
         getArgs: ({ transaction }) => {
-          const { clientId, title, markdown, tags, updatedAt } = transaction.mutations[0]
+          const { clientId, title, markdown, tags, stage, updatedAt } = transaction.mutations[0]
             .modified as Draft;
-          return { clientId, title, markdown, tags, updatedAt };
+          return { clientId, title, markdown, tags, stage, updatedAt };
         },
       }),
       deleteDraft: convexOfflineMutation({

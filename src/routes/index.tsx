@@ -4,14 +4,15 @@ import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useConvexAuth } from "convex/react";
 import { getFunctionName } from "convex/server";
 import { ConvexAuthNextjsProvider } from "convex-auth-ssr-client";
-import { FilePlus, LogOut, Trash2 } from "lucide-react";
-import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
+import { FilePlus, LogOut, PenLine, Trash2 } from "lucide-react";
+import { type FormEvent, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { Editor } from "@/components/editor";
 import { Preview } from "@/components/preview";
 import { TagInput } from "@/components/tag-input";
 import { PLATFORMS, editorFor } from "@/lib/platforms";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { convex } from "@/lib/convex";
 import { type Draft, getDraftStore, useDrafts } from "@/lib/drafts";
 import { getSession } from "@/lib/session";
@@ -67,10 +68,44 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
   const [platformId, setPlatformId] = useState(PLATFORMS[0].id);
   const { signOut } = useAuthActions();
 
+  const [idea, setIdea] = useState("");
+
   const open = (id: string | null) => {
     setSelectedId(id);
     setPaneKey((k) => k + 1);
   };
+
+  // Ideas are captured in one line and stay in the list; open one to add notes.
+  function addIdea(e: FormEvent) {
+    e.preventDefault();
+    const title = idea.trim();
+    if (!title) return;
+    getDraftStore().saveDraft({
+      clientId: crypto.randomUUID(),
+      title,
+      markdown: "",
+      tags: [],
+      stage: "idea",
+      updatedAt: Date.now(),
+    });
+    track("idea_created");
+    setIdea("");
+  }
+
+  const item = (d: Draft) => (
+    <button
+      key={d.clientId}
+      type="button"
+      onClick={() => open(d.clientId)}
+      aria-current={d.clientId === selectedId ? "page" : undefined}
+      className={cn(
+        "truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent",
+        d.clientId === selectedId && "bg-accent font-medium",
+      )}
+    >
+      {d.title || "Untitled"}
+    </button>
+  );
 
   return (
     <div className="grid h-screen grid-rows-[auto_1fr] lg:grid-cols-[14rem_minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-1">
@@ -82,22 +117,30 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
         <Button variant="outline" size="sm" onClick={() => open(null)}>
           <FilePlus /> New draft
         </Button>
-        <nav aria-label="Drafts" className="flex max-h-40 flex-col gap-0.5 overflow-y-auto lg:max-h-none lg:flex-1">
-          {drafts.map((d) => (
-            <button
-              key={d.clientId}
-              type="button"
-              onClick={() => open(d.clientId)}
-              aria-current={d.clientId === selectedId ? "page" : undefined}
-              className={cn(
-                "truncate rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent",
-                d.clientId === selectedId && "bg-accent font-medium",
-              )}
-            >
-              {d.title || "Untitled"}
-            </button>
-          ))}
-        </nav>
+        <div className="flex max-h-40 flex-col gap-4 overflow-y-auto lg:max-h-none lg:flex-1">
+          <nav aria-labelledby="ideas-heading" className="flex flex-col gap-0.5">
+            <h2 id="ideas-heading" className="px-2 pb-1 text-xs font-medium text-muted-foreground">
+              Ideas
+            </h2>
+            <form onSubmit={addIdea} className="pb-1">
+              <Input
+                value={idea}
+                onChange={(e) => setIdea(e.target.value)}
+                placeholder="Add an idea…"
+                aria-label="New idea"
+                maxLength={500}
+                className="h-8"
+              />
+            </form>
+            {drafts.filter((d) => d.stage === "idea").map(item)}
+          </nav>
+          <nav aria-labelledby="drafts-heading" className="flex flex-col gap-0.5">
+            <h2 id="drafts-heading" className="px-2 pb-1 text-xs font-medium text-muted-foreground">
+              Drafts
+            </h2>
+            {drafts.filter((d) => d.stage !== "idea").map(item)}
+          </nav>
+        </div>
         <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
           <span className="truncate">{username}</span>
           <Button
@@ -142,10 +185,11 @@ function DraftPane({
   onCreated: (clientId: string) => void;
   onDeleted: () => void;
 }) {
-  const latest = useRef({
+  const latest = useRef<Omit<Draft, "clientId" | "updatedAt">>({
     title: draft?.title ?? "",
     markdown: draft?.markdown ?? "",
     tags: draft?.tags ?? [],
+    stage: draft?.stage ?? "draft",
   });
   const [view, setView] = useState(latest.current);
   const preview = useDeferredValue(view);
@@ -182,6 +226,13 @@ function DraftPane({
     timer.current = setTimeout(flush, 500);
   }
 
+  // Same record, so the idea's notes become the draft's first lines.
+  function startDrafting() {
+    change({ stage: "draft" });
+    flush();
+    track("idea_drafted");
+  }
+
   function remove() {
     clearTimeout(timer.current);
     pending.current = undefined;
@@ -200,8 +251,13 @@ function DraftPane({
             aria-label="Title"
             className="min-w-0 flex-1 bg-transparent text-3xl font-bold outline-none placeholder:text-muted-foreground/60"
           />
+          {view.stage === "idea" && (
+            <Button size="sm" onClick={startDrafting}>
+              <PenLine /> Start drafting
+            </Button>
+          )}
           {id.current && (
-            <Button variant="ghost" size="icon-sm" aria-label="Delete draft" onClick={remove}>
+            <Button variant="ghost" size="icon-sm" aria-label={`Delete ${view.stage}`} onClick={remove}>
               <Trash2 />
             </Button>
           )}
@@ -217,14 +273,21 @@ function DraftPane({
         />
       </section>
       <section className="overflow-y-auto bg-muted/40 px-6 py-8 lg:px-8">
-        <Preview
-          platformId={platform.id}
-          onPlatformChange={onPlatformChange}
-          title={preview.title}
-          markdown={preview.markdown}
-          tags={preview.tags}
-          author={author}
-        />
+        {view.stage === "idea" ? (
+          <p className="max-w-sm text-sm text-muted-foreground">
+            This is still an idea. Jot down notes; when you're ready, Start drafting moves it to your drafts,
+            notes and all, and shows how it'll look on each site.
+          </p>
+        ) : (
+          <Preview
+            platformId={platform.id}
+            onPlatformChange={onPlatformChange}
+            title={preview.title}
+            markdown={preview.markdown}
+            tags={preview.tags}
+            author={author}
+          />
+        )}
       </section>
     </>
   );

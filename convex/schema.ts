@@ -12,6 +12,8 @@ export default defineSchema({
     title: v.string(),
     markdown: v.string(),
     tags: v.optional(v.array(v.string())), // optional: drafts saved before tags existed
+    // An idea becomes a draft by changing stage; missing means a draft saved before ideas existed.
+    stage: v.optional(v.union(v.literal("idea"), v.literal("draft"))),
     updatedAt: v.number(),
   })
     .index("by_user", ["userId", "updatedAt"])
