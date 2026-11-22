@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as drafts from "../drafts.js";
+import type * as images from "../images.js";
 import type * as users from "../users.js";
 
 import type {
@@ -21,6 +22,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   drafts: typeof drafts;
+  images: typeof images;
   users: typeof users;
 }>;
 
