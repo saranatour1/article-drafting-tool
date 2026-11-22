@@ -42,6 +42,8 @@ export type EditorSpec = {
   more?: ToolId[];
   /** Shows the tag field, with this limit. */
   maxTags?: number;
+  /** X's name for plain text in the Style menu; its button then shows the current style, like "Body ▾". */
+  bodyStyle?: string;
 };
 
 // Until a site's own editor has been matched, it gets these tools and no tag field.
@@ -71,8 +73,16 @@ export const PLATFORMS: Platform[] = [
   {
     id: "x",
     label: "X Articles",
-    heading: (d) => (d <= 2 ? 2 : 3), // Heading and Subheading only
+    heading: (d) => (d <= 2 ? 1 : 2), // X's editor keeps Heading as h1 and Subheading as h2
     tip: "Paste into the X article body; it reads the rich text. Type the title into its own field. Images may need re-uploading.",
+    dark: true,
+    byline: (date) => date,
+    // X's article toolbar, in its order; Divider and Code block sit in its Insert menu.
+    editor: {
+      tools: ["bold", "italic", "strike", "style", "quote", "bulletList", "orderedList", "link", "image"],
+      more: ["divider", "codeBlock"],
+      bodyStyle: "Body",
+    },
   },
   {
     id: "medium",
