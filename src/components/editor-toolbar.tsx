@@ -130,6 +130,7 @@ export function EditorToolbar({ editor, platform }: { editor: Editor | null; pla
       },
   });
   const style = active?.h2 ? "heading" : active?.h3 ? "subheading" : "normal";
+  const styles = spec.bodyStyle ? [{ ...STYLES[0], label: spec.bodyStyle }, ...STYLES.slice(1)] : STYLES;
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -140,12 +141,12 @@ export function EditorToolbar({ editor, platform }: { editor: Editor | null; pla
               <DropdownMenu key={id}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="lg" disabled={!editor} className="mr-1 font-semibold">
-                    Style <ChevronDown />
+                    {spec.bodyStyle ? styles.find((s) => s.value === style)!.label : "Style"} <ChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" onCloseAutoFocus={refocus(editor)}>
                   <DropdownMenuRadioGroup value={style}>
-                    {STYLES.map((s) => (
+                    {styles.map((s) => (
                       <DropdownMenuRadioItem key={s.value} value={s.value} onSelect={() => editor && s.run(editor)}>
                         {s.label}
                       </DropdownMenuRadioItem>

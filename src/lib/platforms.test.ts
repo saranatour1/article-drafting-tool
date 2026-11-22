@@ -22,8 +22,16 @@ test("dev.to tags: normalized, deduped, at most 4, in front matter", () => {
   assert.deepEqual(renderForPlatform(platform("medium"), "T", "Hi", ["convex"]).tags, []);
 });
 
-test("Medium / X / LinkedIn: two heading sizes", () => {
-  for (const id of ["medium", "x", "linkedin"]) {
+test("X: Heading and Subheading become h1 and h2, like its own editor", () => {
+  const out = renderForPlatform(platform("x"), "T", md);
+  assert.match(out.markdown, /^# Big$/m);
+  assert.match(out.markdown, /^## Small$/m);
+  assert.match(out.html, /<h1>Big<\/h1>/);
+  assert.match(out.html, /<h2>Small<\/h2>/);
+});
+
+test("Medium / LinkedIn: two heading sizes", () => {
+  for (const id of ["medium", "linkedin"]) {
     const out = renderForPlatform(platform(id), "T", md);
     assert.match(out.markdown, /^## Big$/m);
     assert.match(out.markdown, /^### Small$/m);
@@ -44,6 +52,10 @@ test("editor tools follow the platform", () => {
   assert.equal(linkedin.tools[0], "style");
   assert.equal(linkedin.maxTags, undefined);
   assert.ok(!linkedin.tools.includes("code")); // LinkedIn has no inline code
+  const x = editorFor(platform("x"));
+  assert.deepEqual(x.tools.slice(0, 4), ["bold", "italic", "strike", "style"]);
+  assert.equal(x.bodyStyle, "Body");
+  assert.ok(!x.tools.includes("code") && !x.tools.includes("heading"));
   // Sites we haven't matched yet get the default tools and no tag field.
   assert.equal(editorFor(platform("medium")), DEFAULT_EDITOR);
 });
