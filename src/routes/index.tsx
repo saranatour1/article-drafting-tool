@@ -6,8 +6,8 @@ import { getFunctionName } from "convex/server";
 import { ConvexAuthNextjsProvider } from "convex-auth-ssr-client";
 import { FilePlus, LogOut, PenLine, Trash2 } from "lucide-react";
 import { type FormEvent, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
-import { AuthForm } from "@/components/auth-form";
 import { Editor } from "@/components/editor";
+import { Landing } from "@/components/landing";
 import { Preview } from "@/components/preview";
 import { TagInput } from "@/components/tag-input";
 import { PLATFORMS, editorFor } from "@/lib/platforms";
@@ -56,7 +56,7 @@ function Gate() {
   }, [signedIn, session.userId, session.username]);
   const drafts = useDrafts(session.token ? session.drafts : undefined);
 
-  if (!signedIn) return <AuthForm />;
+  if (!signedIn) return <Landing />;
   if (!drafts) return <p className="p-8 text-sm text-muted-foreground">Loading drafts…</p>;
   return <Workspace drafts={drafts} username={session.username} />;
 }
