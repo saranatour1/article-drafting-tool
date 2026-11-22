@@ -3,11 +3,14 @@ import { v } from "convex/values";
 import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 
+const stage = v.union(v.literal("idea"), v.literal("draft"));
+
 const draft = v.object({
   clientId: v.string(),
   title: v.string(),
   markdown: v.string(),
   tags: v.array(v.string()),
+  stage,
   updatedAt: v.number(),
 });
 
@@ -22,11 +25,12 @@ export const list = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(200);
-    return rows.map(({ clientId, title, markdown, tags, updatedAt }) => ({
+    return rows.map(({ clientId, title, markdown, tags, stage, updatedAt }) => ({
       clientId,
       title,
       markdown,
       tags: tags ?? [],
+      stage: stage ?? "draft",
       updatedAt,
     }));
   },
@@ -48,8 +52,13 @@ async function findOwn(ctx: MutationCtx, clientId: string) {
 // naturally idempotent (last-write-wins on updatedAt, delete-if-present), so
 // the key is accepted but no receipts table is needed.
 export const save = mutation({
-  // tags optional: outbox writes queued before tags existed still replay.
-  args: { ...draft.fields, tags: v.optional(v.array(v.string())), idempotencyKey: v.string() },
+  // tags and stage optional: outbox writes queued before they existed still replay.
+  args: {
+    ...draft.fields,
+    tags: v.optional(v.array(v.string())),
+    stage: v.optional(stage),
+    idempotencyKey: v.string(),
+  },
   returns: v.null(),
   handler: async (ctx, { idempotencyKey: _, ...fields }) => {
     const tags = fields.tags ?? [];
