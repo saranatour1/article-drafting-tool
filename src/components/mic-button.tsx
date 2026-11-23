@@ -26,6 +26,12 @@ const canRecord = () => typeof MediaRecorder !== "undefined" && Boolean(navigato
 // and upload for the rest of the visit. Browsers without it (Firefox) start here.
 let recordMode = false;
 
+// Calibration for the recorded fallback; tune if quiet mics never cut or noisy rooms never pause.
+const SPEECH_LEVEL = 0.015; // RMS above this counts as speech
+const PAUSE_MS = 500; // this much quiet after speech ends a piece
+const MIN_PIECE_MS = 1500; // shorter pieces give Whisper too little context
+const MAX_PIECE_MS = 12_000; // cut anyway, so text keeps coming during long runs
+
 const ERRORS: Record<string, string> = {
   "not-allowed": "Microphone access is blocked. Allow it in your browser's site settings to dictate.",
   NotAllowedError: "Microphone access is blocked. Allow it in your browser's site settings to dictate.",
@@ -59,6 +65,11 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
 
   if (!supported) return null;
 
+  /**
+   * Near-real-time fallback: record in short pieces, cut at a pause, and
+   * transcribe each piece while the next one records. Text lands a second or two
+   * after each phrase, and no single upload gets long enough to time out.
+   */
   const record = async () => {
     let stream: MediaStream;
     try {
@@ -66,30 +77,73 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
     } catch (e) {
       return window.alert(message(e instanceof Error ? e.name : String(e)));
     }
-    const recorder = new MediaRecorder(stream);
-    const chunks: Blob[] = [];
-    recorder.ondataavailable = (e) => chunks.push(e.data);
-    recorder.onstop = async () => {
-      stream.getTracks().forEach((t) => t.stop());
-      stop.current = null;
-      if (!mounted.current) return;
-      setState("transcribing");
+    const audio = new AudioContext();
+    const analyser = audio.createAnalyser();
+    audio.createMediaStreamSource(stream).connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+
+    let on = true;
+    let failed = false;
+    let recorder: MediaRecorder;
+    let tick: ReturnType<typeof setInterval>;
+    let pending = Promise.resolve(); // pieces are transcribed in order, so the text stays in order
+
+    const transcribe = async (clip: Blob) => {
+      if (failed || !mounted.current) return;
       try {
-        const res = await fetch("/transcribe", {
-          method: "POST",
-          headers: { "Content-Type": recorder.mimeType },
-          body: new Blob(chunks, { type: recorder.mimeType }),
-        });
+        const res = await fetch("/transcribe", { method: "POST", headers: { "Content-Type": clip.type }, body: clip });
         if (!res.ok) throw new Error(await res.text());
         const { text } = (await res.json()) as { text: string };
         if (mounted.current && text.trim()) send.current(text.trim());
       } catch (e) {
+        failed = true; // one message, not one per piece
+        stop.current?.();
         window.alert(`Couldn't transcribe: ${e instanceof Error ? e.message : e}`);
       }
-      if (mounted.current) setState("idle");
     };
-    stop.current = () => recorder.stop();
-    recorder.start();
+
+    const piece = () => {
+      const chunks: Blob[] = [];
+      const started = Date.now();
+      let quietSince = 0;
+      let spoke = false;
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        if (on) piece(); // start the next piece before uploading this one
+        // Silent pieces are skipped: they cost money and Whisper invents text for silence.
+        if (spoke) pending = pending.then(() => transcribe(new Blob(chunks, { type: chunks[0]?.type })));
+        if (on) return;
+        stream.getTracks().forEach((t) => t.stop());
+        void audio.close();
+        if (!mounted.current) return;
+        setState("transcribing");
+        void pending.then(() => mounted.current && setState("idle"));
+      };
+      recorder.start();
+      tick = setInterval(() => {
+        analyser.getFloatTimeDomainData(samples);
+        const rms = Math.sqrt(samples.reduce((s, x) => s + x * x, 0) / samples.length);
+        const now = Date.now();
+        if (rms > SPEECH_LEVEL) {
+          spoke = true;
+          quietSince = 0;
+        } else quietSince ||= now;
+        const pause = spoke && quietSince > 0 && now - quietSince > PAUSE_MS;
+        if ((pause && now - started > MIN_PIECE_MS) || now - started > MAX_PIECE_MS) {
+          clearInterval(tick);
+          recorder.stop();
+        }
+      }, 100);
+    };
+
+    stop.current = () => {
+      stop.current = null;
+      on = false;
+      clearInterval(tick);
+      if (recorder.state !== "inactive") recorder.stop();
+    };
+    piece();
     setState("listening");
   };
 
