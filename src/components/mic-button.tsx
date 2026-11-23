@@ -20,6 +20,16 @@ const Recognizer = () =>
   (window as unknown as Record<string, (new () => Recognition) | undefined>).SpeechRecognition ??
   (window as unknown as Record<string, (new () => Recognition) | undefined>).webkitSpeechRecognition;
 
+const ERRORS: Record<string, string> = {
+  "not-allowed": "Microphone access is blocked. Allow it in your browser's site settings to dictate.",
+  "service-not-allowed":
+    "This browser won't run speech recognition here. In Safari, turn on Siri or Dictation in System Settings.",
+  // Chromium browsers without Google's speech service (Brave, Arc, Electron apps) fail this way.
+  network: "This browser can't reach a speech recognition service. Try Chrome, Edge or Safari.",
+  "audio-capture": "No microphone found.",
+  "language-not-supported": "Speech recognition doesn't support your browser's language.",
+};
+
 /**
  * Dictation through the browser's own speech recognition: each finished phrase
  * goes to onText. Hidden where it isn't supported (Firefox).
@@ -55,9 +65,8 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
       }
     };
     r.onerror = (e) => {
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        window.alert("Microphone access is blocked. Allow it in your browser's site settings to dictate.");
-      }
+      if (e.error === "aborted" || e.error === "no-speech") return; // stopped by us, or silence
+      window.alert(ERRORS[e.error] ?? `Dictation stopped: ${e.error}`);
     };
     r.onend = () => {
       rec.current = null;
