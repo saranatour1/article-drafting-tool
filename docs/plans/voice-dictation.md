@@ -76,7 +76,17 @@ denied permission shows a message, Firefox hides the button.
 - `src/lib/platforms.ts`: no new `ToolId`.
 - `package.json`: no new dependencies.
 
-## Later (only if the Web Speech API falls short)
+## Fallback (implemented): Brave, Arc, Firefox
+
+Brave and Arc expose `webkitSpeechRecognition` but have no speech service behind
+it, so it fails with `network`. On that error (or `service-not-allowed`, or no API
+at all) the mic records with `MediaRecorder` and posts the clip to `POST /transcribe`
+(`src/routes/transcribe.ts`). That route lets only signed-in users through, caps uploads at 10 MB and runs
+`@cf/openai/whisper-large-v3-turbo` through the Workers AI binding (`AI` in
+`wrangler.jsonc`). Text arrives when you stop recording, not live. Cost is billed
+to the Cloudflare account per audio minute.
+
+## Original "later" notes
 
 Record with `MediaRecorder` → upload the clip with the same pattern as
 `uploadImage` in `src/components/editor.tsx` (`convex/images.ts` `generateUploadUrl`)
