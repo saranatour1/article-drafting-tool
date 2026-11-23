@@ -21,6 +21,7 @@ import {
   Strikethrough,
   Undo2,
 } from "lucide-react";
+import { MicButton } from "@/components/mic-button";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -179,6 +180,17 @@ export function EditorToolbar({ editor, platform }: { editor: Editor | null; pla
           );
         })}
         <span className="ml-auto pr-1 text-xs whitespace-nowrap text-muted-foreground">{platform.label} tools</span>
+        {/* Not one of the platform's tools: no site has a mic, so it sits outside spec.tools. */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <MicButton
+              size="lg"
+              disabled={!editor}
+              onText={(text) => editor?.chain().focus().insertContent(text + " ").run()}
+            />
+          </TooltipTrigger>
+          <TooltipContent>Dictate</TooltipContent>
+        </Tooltip>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon-lg" aria-label="More formatting" disabled={!editor}>
