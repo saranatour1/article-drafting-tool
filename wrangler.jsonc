@@ -4,6 +4,8 @@
   "compatibility_date": "2026-11-01",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // Whisper for /transcribe. Always runs on Cloudflare, also in `pnpm dev` (needs `wrangler login`).
+  "ai": { "binding": "AI", "remote": true },
   "routes": [{ "pattern": "drafts.saranatour.dev", "custom_domain": true }],
   // Lets Workers Builds publish PR branches with `wrangler preview`; settings
   // left out here (assets, compatibility, observability) come from the top level.

@@ -8,6 +8,7 @@ import { FilePlus, LogOut, PenLine, Trash2 } from "lucide-react";
 import { type FormEvent, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import { Editor } from "@/components/editor";
 import { Landing } from "@/components/landing";
+import { MicButton } from "@/components/mic-button";
 import { Preview } from "@/components/preview";
 import { TagInput } from "@/components/tag-input";
 import { PLATFORMS, editorFor } from "@/lib/platforms";
@@ -122,7 +123,7 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
             <h2 id="ideas-heading" className="px-2 pb-1 text-xs font-medium text-muted-foreground">
               Ideas
             </h2>
-            <form onSubmit={addIdea} className="pb-1">
+            <form onSubmit={addIdea} className="flex gap-1 pb-1">
               <Input
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
@@ -130,6 +131,11 @@ function Workspace({ drafts, username }: { drafts: Draft[]; username: string | n
                 aria-label="New idea"
                 maxLength={500}
                 className="h-8"
+              />
+              <MicButton
+                aria-label="Dictate an idea"
+                size="sm"
+                onText={(text) => setIdea((s) => (s ? `${s} ${text}` : text).slice(0, 500))}
               />
             </form>
             {drafts.filter((d) => d.stage === "idea").map(item)}

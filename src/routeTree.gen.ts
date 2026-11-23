@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TranscribeRouteImport } from './routes/transcribe'
 import { Route as AuthActionRouteImport } from './routes/auth.$action'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TranscribeRoute = TranscribeRouteImport.update({
+  id: '/transcribe',
+  path: '/transcribe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthActionRoute = AuthActionRouteImport.update({
@@ -25,27 +31,31 @@ const AuthActionRoute = AuthActionRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/transcribe': typeof TranscribeRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/transcribe': typeof TranscribeRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/transcribe': typeof TranscribeRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth/$action'
+  fullPaths: '/' | '/transcribe' | '/auth/$action'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/$action'
-  id: '__root__' | '/' | '/auth/$action'
+  to: '/' | '/transcribe' | '/auth/$action'
+  id: '__root__' | '/' | '/transcribe' | '/auth/$action'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TranscribeRoute: typeof TranscribeRoute
   AuthActionRoute: typeof AuthActionRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transcribe': {
+      id: '/transcribe'
+      path: '/transcribe'
+      fullPath: '/transcribe'
+      preLoaderRoute: typeof TranscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/$action': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TranscribeRoute: TranscribeRoute,
   AuthActionRoute: AuthActionRoute,
 }
 export const routeTree = rootRouteImport
