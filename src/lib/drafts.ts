@@ -17,6 +17,12 @@ export type Draft = {
   tags: string[];
   /** An idea moves to the drafts when you start writing it up. */
   stage: "idea" | "draft";
+  /** Label clientIds: private, never copied out. */
+  labels: string[];
+  /** Preview tabs besides the plain page; null until picked, so the defaults from Preferences apply. */
+  destinations: string[] | null;
+  /** Started by talking or typing; null for drafts from before this was kept. */
+  source: "voice" | "typed" | null;
   updatedAt: number;
 };
 
@@ -43,9 +49,9 @@ function createDraftStore() {
         mutation: api.drafts.save,
         collections: [drafts],
         getArgs: ({ transaction }) => {
-          const { clientId, title, markdown, tags, stage, updatedAt } = transaction.mutations[0]
-            .modified as Draft;
-          return { clientId, title, markdown, tags, stage, updatedAt };
+          const { clientId, title, markdown, tags, stage, labels, destinations, source, updatedAt } = transaction
+            .mutations[0].modified as Draft;
+          return { clientId, title, markdown, tags, stage, labels, destinations, source, updatedAt };
         },
       }),
       deleteDraft: convexOfflineMutation({
@@ -61,6 +67,8 @@ function createDraftStore() {
 
   return {
     drafts,
+    /** Writes still waiting for the server (offline, or in flight). */
+    pendingCount: () => executor.getPendingCount(),
     saveDraft: executor.createOfflineAction<Draft>({
       mutationFnName: "saveDraft",
       onMutate: (draft) => {

@@ -11,7 +11,10 @@
 import type * as auth from "../auth.js";
 import type * as drafts from "../drafts.js";
 import type * as images from "../images.js";
+import type * as labels from "../labels.js";
+import type * as sites from "../sites.js";
 import type * as users from "../users.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -23,7 +26,10 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   drafts: typeof drafts;
   images: typeof images;
+  labels: typeof labels;
+  sites: typeof sites;
   users: typeof users;
+  validators: typeof validators;
 }>;
 
 /**

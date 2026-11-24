@@ -5,12 +5,18 @@ import { mutation, query } from "./_generated/server";
 
 const stage = v.union(v.literal("idea"), v.literal("draft"));
 
+const source = v.union(v.literal("voice"), v.literal("typed"));
+
 const draft = v.object({
   clientId: v.string(),
   title: v.string(),
   markdown: v.string(),
   tags: v.array(v.string()),
   stage,
+  labels: v.array(v.string()),
+  // null: never picked, so the app uses the default destinations
+  destinations: v.union(v.array(v.string()), v.null()),
+  source: v.union(source, v.null()),
   updatedAt: v.number(),
 });
 
@@ -25,12 +31,15 @@ export const list = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .order("desc")
       .take(200);
-    return rows.map(({ clientId, title, markdown, tags, stage, updatedAt }) => ({
+    return rows.map(({ clientId, title, markdown, tags, stage, labels, destinations, source, updatedAt }) => ({
       clientId,
       title,
       markdown,
       tags: tags ?? [],
       stage: stage ?? "draft",
+      labels: labels ?? [],
+      destinations: destinations ?? null,
+      source: source ?? null,
       updatedAt,
     }));
   },
@@ -52,24 +61,31 @@ async function findOwn(ctx: MutationCtx, clientId: string) {
 // naturally idempotent (last-write-wins on updatedAt, delete-if-present), so
 // the key is accepted but no receipts table is needed.
 export const save = mutation({
-  // tags and stage optional: outbox writes queued before they existed still replay.
+  // Everything past the first fields is optional: outbox writes queued before they existed still replay.
   args: {
     ...draft.fields,
     tags: v.optional(v.array(v.string())),
     stage: v.optional(stage),
+    labels: v.optional(v.array(v.string())),
+    destinations: v.optional(v.union(v.array(v.string()), v.null())),
+    source: v.optional(v.union(source, v.null())),
     idempotencyKey: v.string(),
   },
   returns: v.null(),
-  handler: async (ctx, { idempotencyKey: _, ...fields }) => {
-    const tags = fields.tags ?? [];
+  handler: async (ctx, { idempotencyKey: _, destinations, source, ...rest }) => {
+    const tags = rest.tags ?? [];
+    const lists = [rest.labels ?? [], destinations ?? []];
     if (
-      fields.title.length > 500 ||
-      fields.markdown.length > 500_000 ||
+      rest.title.length > 500 ||
+      rest.markdown.length > 500_000 ||
       tags.length > 10 ||
-      tags.some((t) => t.length > 50)
+      tags.some((t) => t.length > 50) ||
+      lists.some((l) => l.length > 30 || l.some((s) => s.length > 64))
     ) {
       throw new Error("Draft too large");
     }
+    // Stored as missing rather than null, like the other optional fields.
+    const fields = { ...rest, destinations: destinations ?? undefined, source: source ?? undefined };
     const { userId, existing } = await findOwn(ctx, fields.clientId);
     if (existing === null) {
       await ctx.db.insert("drafts", { userId, ...fields });

@@ -2,12 +2,15 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/newsreader";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
+    --font-serif: 'Newsreader Variable', Georgia, serif;
+    --color-ground: var(--ground);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -73,6 +76,8 @@
     --chart-4: oklch(0.371 0 0);
     --chart-5: oklch(0.269 0 0);
     --radius: 0.625rem;
+    /* The page around the white panel */
+    --ground: oklch(0.966 0.002 286);
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
     --sidebar-primary: oklch(0.205 0 0);
@@ -84,6 +89,7 @@
 }
 
 .dark {
+    --ground: oklch(0.115 0 0);
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -346,4 +352,69 @@
   & a { font-weight: 600; text-decoration: none; }
   & blockquote { font-style: normal; }
   & pre { background: #f4f2ee; color: rgb(0 0 0 / 0.9); border-radius: 0.5rem; }
+}
+
+/*
+ * Sites matched from their own editors above; these are lighter approximations
+ * of the rest, and of the plain page and your own sites.
+ */
+.preview-plain .preview,
+.preview-own .preview {
+  --tw-prose-body: #27272a;
+  --tw-prose-headings: #18181b;
+  --tw-prose-links: #18181b;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  & .preview-title { font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  & .preview-byline, & .preview-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #63636e; }
+  & .preview-byline { margin-bottom: 1rem; }
+  & .preview-avatar { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; border-radius: 9999px; background: #fdebf3; color: #be185d; font-size: 0.75rem; font-weight: 600; }
+  & .preview-author { font-weight: 600; color: #18181b; }
+  & .preview-tag { color: #3f3f46; }
+}
+.preview-hashnode .preview {
+  --tw-prose-links: #2962ff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  & .preview-title { font-size: 2.5rem; font-weight: 800; line-height: 1.2; }
+  & .preview-byline { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.9375rem; }
+  & .preview-avatar { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 9999px; background: #e0e7ff; color: #3730a3; font-weight: 700; }
+  & .preview-author { font-weight: 600; }
+  & .preview-date { color: #64748b; }
+  & .preview-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  & .preview-tag { padding: 0.125rem 0.625rem; border-radius: 9999px; background: #f1f5f9; color: #334155; font-size: 0.875rem; }
+  & .preview-tag-hash { display: none; }
+}
+.preview-substack .preview {
+  --tw-prose-body: #363737;
+  --tw-prose-headings: #363737;
+  --tw-prose-links: #363737;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  line-height: 1.6;
+  & .preview-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 2.25rem; font-weight: 700; line-height: 1.2; }
+  & h2, & h3 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  & a { text-decoration: underline; }
+}
+.preview-ghost .preview {
+  --tw-prose-body: #15171a;
+  --tw-prose-headings: #15171a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 1.1875rem;
+  line-height: 1.6;
+  & .preview-title { font-size: 2.75rem; font-weight: 800; letter-spacing: -0.015em; line-height: 1.1; }
+  & .preview-byline { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem; font-size: 0.875rem; }
+  & .preview-avatar { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 9999px; background: #15171a; color: #fff; font-weight: 700; }
+  & .preview-author { font-weight: 600; }
+  & .preview-date { color: #738a94; }
+}
+.preview-wordpress .preview {
+  --tw-prose-body: #1e1e1e;
+  --tw-prose-headings: #1e1e1e;
+  --tw-prose-links: #3858e9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.65;
+  & .preview-title { font-size: 2.5rem; font-weight: 400; line-height: 1.2; }
 }

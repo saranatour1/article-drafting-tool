@@ -7,8 +7,20 @@ import { type Token, lexer } from "marked";
  */
 export type WritingCheck = {
   article: { ok: boolean; text: string }[];
-  paragraphs: { start: string; issues: string[] }[];
+  paragraphs: { start: string; issues: Issue[] }[];
 };
+
+/** Groups of rules a writer can turn off in Preferences; "search" is the whole-article checks. */
+export const RULES = {
+  longSentence: "Long sentences",
+  longParagraph: "Long paragraphs",
+  repeats: "Repeated words",
+  punctuation: "Spacing and punctuation",
+  capitals: "Capital letters",
+  search: "Search checks",
+} as const;
+export type Rule = keyof typeof RULES;
+export type Issue = { rule: Rule; text: string };
 
 const LONG_SENTENCE = 30; // words
 const LONG_PARAGRAPH = 150; // words
@@ -38,21 +50,22 @@ const syllables = (w: string) => {
 };
 
 function paragraphIssues(p: string) {
-  const issues: string[] = [];
-  if (!/([.!?…:;]["'”’»)\]]*|\p{Extended_Pictographic})$/u.test(p)) issues.push("No punctuation at the end");
+  const issues: Issue[] = [];
+  const add = (rule: Rule, text: string) => issues.push({ rule, text });
+  if (!/([.!?…:;]["'”’»)\]]*|\p{Extended_Pictographic})$/u.test(p)) add("punctuation", "No punctuation at the end");
   if (/(^[^\p{L}\d]*|(?<!\b(e\.g|i\.e|etc|vs))[.!?]\s+)\p{Ll}/u.test(p)) {
-    issues.push("A sentence starts with a lowercase letter");
+    add("capitals", "A sentence starts with a lowercase letter");
   }
-  if (/(^|\s)i(\s|['’]|$)/.test(p)) issues.push("Lowercase “i”");
+  if (/(^|\s)i(\s|['’]|$)/.test(p)) add("capitals", "Lowercase “i”");
   const repeat = p.match(/(?<!\p{L})(\p{L}+)\s+\1(?!\p{L})/iu);
-  if (repeat) issues.push(`Repeated word: “${repeat[0]}”`);
-  if (/\S {2,}\S/.test(p)) issues.push("Double space");
-  if (/\p{L} +([,;](?!\))|[.!?](?=\s|$))/u.test(p)) issues.push("Space before punctuation");
-  if (/\p{L},\p{L}|\p{Ll}[.!?]\p{Lu}\p{Ll}/u.test(p)) issues.push("Missing space after punctuation");
+  if (repeat) add("repeats", `Repeated word: “${repeat[0]}”`);
+  if (/\S {2,}\S/.test(p)) add("punctuation", "Double space");
+  if (/\p{L} +([,;](?!\))|[.!?](?=\s|$))/u.test(p)) add("punctuation", "Space before punctuation");
+  if (/\p{L},\p{L}|\p{Ll}[.!?]\p{Lu}\p{Ll}/u.test(p)) add("punctuation", "Missing space after punctuation");
   const longest = Math.max(...p.split(/(?<=[.!?…])\s+/).map((s) => words(s).length));
-  if (longest > LONG_SENTENCE) issues.push(`A ${longest}-word sentence; try splitting it`);
+  if (longest > LONG_SENTENCE) add("longSentence", `A ${longest}-word sentence; try splitting it`);
   const count = words(p).length;
-  if (count > LONG_PARAGRAPH) issues.push(`Long paragraph (${count} words)`);
+  if (count > LONG_PARAGRAPH) add("longParagraph", `Long paragraph (${count} words)`);
   return issues;
 }
 

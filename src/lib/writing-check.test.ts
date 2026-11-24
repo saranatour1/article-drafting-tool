@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { checkWriting } from "./writing-check.ts";
 
-const issuesOf = (md: string) => checkWriting("A title", md).paragraphs.map((p) => p.issues);
+const issuesOf = (md: string) => checkWriting("A title", md).paragraphs.map((p) => p.issues.map((i) => i.text));
 
 test("a clean paragraph needs no work", () => {
   assert.deepEqual(issuesOf("This reads fine. It ends well!\n\nSo does “this one.”\n\nAnd this 🙂"), [[], [], []]);
@@ -49,4 +49,9 @@ test("article checks", () => {
   assert.equal(out[1].ok, true); // 360 words
   assert.deepEqual(out[2], { ok: false, text: "No headings; add some so readers and search can scan it" });
   assert.match(out[3].text, /easy to read$/);
+});
+
+test("each issue names its rule group", () => {
+  const [p] = checkWriting("T", "so i think the the plan is good").paragraphs;
+  assert.deepEqual([...new Set(p.issues.map((i) => i.rule))].sort(), ["capitals", "punctuation", "repeats"]);
 });

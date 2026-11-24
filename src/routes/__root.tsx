@@ -3,14 +3,16 @@ import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { DatabuddyProvider } from "@databuddy/sdk/react";
 import type { ReactNode } from "react";
 import { DATABUDDY_CLIENT_ID } from "@/lib/analytics";
+import { SITE_URL } from "@/lib/site";
 import appCss from "../styles.css?url";
 
-// Social crawlers need absolute URLs. The public origin (same as wrangler.jsonc's
-// route); VITE_SITE_URL overrides it, e.g. for a different host.
-const siteUrl: string = import.meta.env.VITE_SITE_URL ?? "https://drafts.saranatour.dev";
+const siteUrl = SITE_URL;
+
+// Before first paint: the theme saved in Preferences (copied to localStorage), so dark pages don't flash light.
+const themeScript = `try{var t=localStorage.getItem("theme");if(t==="dark"||(t==="system"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}`;
 const title = "Article drafts";
 const description =
-  "Write an article once, preview how it looks on dev.to, X Articles and Medium, and copy it for each.";
+  "Draft articles out loud or by hand, then preview and copy them for dev.to, Medium, LinkedIn, X and more.";
 const ogImage = `${siteUrl}/og.png`;
 
 export const Route = createRootRoute({
@@ -45,8 +47,11 @@ export const Route = createRootRoute({
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // The theme script changes the class before React hydrates.
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: a constant, no user input */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <HeadContent />
       </head>
       <body>

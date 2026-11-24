@@ -2,6 +2,7 @@ import { track } from "@databuddy/sdk";
 import { LoaderCircle, Mic } from "lucide-react";
 import { type ComponentProps, useEffect, useRef, useState } from "react";
 import { Toggle } from "@/components/ui/toggle";
+import { usePrefs } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
 
 // TypeScript's DOM lib has no Web Speech API types; this is the part we use.
@@ -42,10 +43,12 @@ const ERRORS: Record<string, string> = {
 const message = (code: string) => ERRORS[code] ?? `Dictation stopped: ${code}`;
 
 /**
- * Dictation: each finished phrase goes to onText. Uses the browser's speech
- * recognition (live), else records a clip and transcribes it at /transcribe.
+ * Dictation: each finished phrase goes to onText, and with onInterim the words
+ * still being heard. Uses the browser's speech recognition (live), else records
+ * a clip and transcribes it at /transcribe. Language and mode come from Preferences.
  */
-export function MicButton({ onText, className, ...props }: { onText: (text: string) => void } & ComponentProps<typeof Toggle>) {
+export function useDictation({ onText, onInterim }: { onText: (text: string) => void; onInterim?: (text: string) => void }) {
+  const { prefs } = usePrefs();
   // False on the server and the first client render, so hydration matches.
   const [supported, setSupported] = useState(false);
   const [state, setState] = useState<"idle" | "listening" | "transcribing">("idle");
@@ -53,17 +56,19 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
   const mounted = useRef(true);
   const send = useRef(onText);
   send.current = onText;
+  const interim = useRef(onInterim);
+  interim.current = onInterim;
 
   useEffect(() => {
     mounted.current = true;
     setSupported(Boolean(Recognizer()) || canRecord());
     return () => {
       mounted.current = false; // switching drafts turns the mic off and drops a recording
-      stop.current?.();
+      const s = stop.current;
+      stop.current = null; // so a remount (React's dev double-mount) can start afresh
+      s?.();
     };
   }, []);
-
-  if (!supported) return null;
 
   /**
    * Near-real-time fallback: record in short pieces, cut at a pause, and
@@ -150,13 +155,16 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
   const listen = () => {
     const r = new (Recognizer()!)();
     r.continuous = true;
-    r.interimResults = false;
-    r.lang = navigator.language;
+    r.interimResults = Boolean(interim.current);
+    r.lang = prefs.language || navigator.language;
     r.onresult = (e) => {
+      let heard = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const text = e.results[i][0].transcript.trim();
-        if (e.results[i].isFinal && text) send.current(text);
+        if (!e.results[i].isFinal) heard += ` ${text}`;
+        else if (text) send.current(text);
       }
+      interim.current?.(heard.trim());
     };
     r.onerror = (e) => {
       if (e.error === "aborted" || e.error === "no-speech") return; // stopped by us, or silence
@@ -170,11 +178,15 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
       }
       window.alert(message(e.error));
     };
+    const mine = () => r.stop();
     r.onend = () => {
-      stop.current = null;
+      // A session ending late must not mark a newer one as stopped.
+      if (stop.current === mine) stop.current = null;
+      if (stop.current !== null || !mounted.current) return;
+      interim.current?.("");
       setState("idle");
     };
-    stop.current = () => r.stop();
+    stop.current = mine;
     r.start();
     setState("listening");
   };
@@ -182,10 +194,21 @@ export function MicButton({ onText, className, ...props }: { onText: (text: stri
   const toggle = () => {
     if (stop.current) return stop.current();
     track("dictation_started");
-    if (recordMode || !Recognizer()) void record();
+    if (recordMode || prefs.listen === "record" || !Recognizer()) void record();
     else listen();
   };
 
+  /** Starts unless already listening; for views that listen as soon as they open. */
+  const start = () => {
+    if (!stop.current) toggle();
+  };
+
+  return { supported, state, toggle, start };
+}
+
+export function MicButton({ onText, className, ...props }: { onText: (text: string) => void } & ComponentProps<typeof Toggle>) {
+  const { supported, state, toggle } = useDictation({ onText });
+  if (!supported) return null;
   const busy = state === "transcribing";
   return (
     <Toggle

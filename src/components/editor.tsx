@@ -78,7 +78,7 @@ export function Editor({
       handleDrop: (view, event) =>
         insertImageFiles(view, event.dataTransfer, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos),
       attributes: {
-        class: "prose prose-neutral max-w-none min-h-[60vh] focus:outline-none",
+        class: "prose prose-neutral dark:prose-invert max-w-none min-h-[60vh] focus:outline-none",
         "aria-label": "Article body",
       },
     },
