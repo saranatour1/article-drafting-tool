@@ -7,7 +7,7 @@ import { env } from "./_generated/server";
 const auth = setupConvexAuth({ component: components.auth });
 export const { signOut, refreshSession, isAuthenticated } = auth;
 
-export const { signUpWithUsernamePassword, signInWithUsernamePassword } =
+export const { signUpWithUsernamePassword, signInWithUsernamePassword, changePassword } =
   setupUsernamePassword(auth, {
     component: components.authPassword,
     usernameComponent: components.authUsername,

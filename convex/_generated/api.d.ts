@@ -8,10 +8,16 @@
  * @module
  */
 
+import type * as account from "../account.js";
 import type * as auth from "../auth.js";
 import type * as drafts from "../drafts.js";
+import type * as githubLink from "../githubLink.js";
 import type * as images from "../images.js";
+import type * as labels from "../labels.js";
+import type * as sites from "../sites.js";
+import type * as ticket from "../ticket.js";
 import type * as users from "../users.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -20,10 +26,16 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  account: typeof account;
   auth: typeof auth;
   drafts: typeof drafts;
+  githubLink: typeof githubLink;
   images: typeof images;
+  labels: typeof labels;
+  sites: typeof sites;
+  ticket: typeof ticket;
   users: typeof users;
+  validators: typeof validators;
 }>;
 
 /**

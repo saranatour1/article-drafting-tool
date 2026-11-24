@@ -50,11 +50,14 @@ export function Editor({
   initialMarkdown,
   onChange,
   platform,
+  dictate,
 }: {
   initialMarkdown: string;
   onChange: (markdown: string) => void;
   /** The tab picked in the preview; the toolbar and / menu switch to its tools. */
   platform: Platform;
+  /** Start dictating as soon as it opens. */
+  dictate?: boolean;
 }) {
   // The editor is created once; the / menu reads the current platform through this ref.
   const tools = useRef(editorFor(platform));
@@ -78,7 +81,7 @@ export function Editor({
       handleDrop: (view, event) =>
         insertImageFiles(view, event.dataTransfer, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos),
       attributes: {
-        class: "prose prose-neutral max-w-none min-h-[60vh] focus:outline-none",
+        class: "prose prose-neutral dark:prose-invert max-w-none min-h-[60vh] focus:outline-none",
         "aria-label": "Article body",
       },
     },
@@ -88,7 +91,7 @@ export function Editor({
     <>
       {/* Full-width band like dev.to's; the negative margins cancel the column's padding. */}
       <div className="sticky top-0 z-10 -mx-6 mb-6 border-y bg-background/95 px-4 py-1 backdrop-blur lg:-mx-10 lg:px-8">
-        <EditorToolbar editor={editor} platform={platform} />
+        <EditorToolbar editor={editor} platform={platform} dictate={dictate} />
       </div>
       <EditorContent editor={editor} />
     </>

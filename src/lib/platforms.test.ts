@@ -1,7 +1,7 @@
 // Run: node --test src/lib/platforms.test.ts
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DEFAULT_EDITOR, PLATFORMS, editorFor, renderForPlatform } from "./platforms.ts";
+import { DEFAULT_EDITOR, PLATFORMS, destinationsFor, editorFor, fillFrontMatter, renderForPlatform, sitePlatform } from "./platforms.ts";
 
 const platform = (id: string) => PLATFORMS.find((p) => p.id === id)!;
 const md = "# Big\n\nIntro\n\n### Small\n\n```\n# not a heading\n```\n\n<img src=x onerror=alert(1)>\n";
@@ -58,4 +58,35 @@ test("editor tools follow the platform", () => {
   assert.ok(!x.tools.includes("code") && !x.tools.includes("heading"));
   // Sites we haven't matched yet get the default tools and no tag field.
   assert.equal(editorFor(platform("medium")), DEFAULT_EDITOR);
+});
+
+test("dev.to: published: true when the draft option is off", () => {
+  assert.match(renderForPlatform(platform("devto"), "T", "Hi").markdown, /^published: false$/m);
+  assert.match(renderForPlatform(platform("devto"), "T", "Hi", [], { devtoDraft: false }).markdown, /^published: true$/m);
+});
+
+test("your own site: headings, tags and front matter from its settings", () => {
+  const site = {
+    clientId: "s1",
+    name: "Personal blog",
+    headingTop: 2,
+    headingSub: 4,
+    maxTags: 2,
+    lowercaseTags: false,
+    frontMatter: "---\ntitle: {title}\ntags: {tags}\ndate: {date}\n---",
+    tip: "",
+  };
+  const out = renderForPlatform(sitePlatform(site), 'A: "b"', md, ["Convex", "convex", "Web Dev", "ai"]);
+  assert.deepEqual(out.tags, ["Convex", "Web Dev"]);
+  assert.match(out.markdown, /^---\ntitle: "A: \\"b\\""\ntags: Convex, Web Dev\ndate: \d{4}-\d\d-\d\d\n---\n\n## Big$/m);
+  assert.match(out.markdown, /^#### Small$/m);
+  assert.equal(fillFrontMatter("{date} {nope}", "", [], "2026-11-24"), "2026-11-24 {nope}");
+  const bare = sitePlatform({ ...site, frontMatter: " ", maxTags: 0 });
+  assert.equal(bare.frontMatter, undefined);
+  assert.equal(bare.tags, undefined);
+});
+
+test("destinations: plain page first, unknown ids dropped", () => {
+  const ids = destinationsFor(["medium", "gone", "plain", "devto"], []).map((p) => p.id);
+  assert.deepEqual(ids, ["plain", "medium", "devto"]);
 });
