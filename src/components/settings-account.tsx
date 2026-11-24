@@ -1,5 +1,5 @@
 import { useMutation } from "convex/react";
-import { Download, FileText, KeyRound, Lock, LogOut, User } from "lucide-react";
+import { Download, FileText, KeyRound, Lock, LogOut, User, X } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { GithubIcon } from "@/components/auth-form";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label as FieldLabel } from "@/components/ui/label";
 import { type Draft, getDraftStore } from "@/lib/drafts";
 import type { Label } from "@/lib/look";
+import { useNav } from "@/lib/nav";
 import { usePrefs } from "@/lib/prefs";
 import { api } from "../../convex/_generated/api";
 import { exportEverything, useSignOut } from "./account-menu";
@@ -22,7 +23,24 @@ export function AccountSettings({ drafts, labels }: { drafts: Draft[]; labels: L
   const file = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [changing, setChanging] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const signOut = useSignOut();
+  const { view, go } = useNav();
+
+  // The server route keeps the flow away from the sign-in client; see src/routes/link-github.ts.
+  async function connectGithub() {
+    setConnecting(true);
+    try {
+      const res = await fetch("/link-github", { method: "POST" });
+      if (!res.ok) throw new Error(await res.text());
+      const { redirect } = (await res.json()) as { redirect: string };
+      window.location.href = redirect;
+    } catch (e) {
+      setConnecting(false);
+      window.alert(`Couldn't start connecting GitHub: ${e instanceof Error ? e.message : e}`);
+    }
+  }
 
   async function upload(photo: File) {
     setUploading(true);
@@ -42,6 +60,22 @@ export function AccountSettings({ drafts, labels }: { drafts: Draft[]; labels: L
   return (
     <>
       <PageTitle title="Account">Who you are here, how you sign in, and your writing to take with you.</PageTitle>
+
+      {view.github && (
+        <div
+          role="status"
+          className={
+            view.github === "linked"
+              ? "flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900 dark:border-green-500/25 dark:bg-green-500/10 dark:text-green-100"
+              : "flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-950 dark:border-yellow-500/25 dark:bg-yellow-500/10 dark:text-yellow-100"
+          }
+        >
+          <span className="flex-1">{GITHUB_RESULTS[view.github] ?? GITHUB_RESULTS.failed}</span>
+          <button type="button" aria-label="Dismiss" onClick={() => go({ s: "account" }, { replace: true })} className="opacity-70 hover:opacity-100">
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
 
       <Card icon={<User />} tint="bg-pink-100 text-pink-800 dark:bg-pink-500/15 dark:text-pink-200" title="Profile" description="Shown as the author on your previews.">
         <div className="flex flex-wrap items-center gap-4 border-t px-5 py-4">
@@ -102,16 +136,24 @@ export function AccountSettings({ drafts, labels }: { drafts: Draft[]; labels: L
             </Button>
           </Row>
         )}
-        {me.githubLogin && (
-          <Row
-            title={
-              <span className="inline-flex items-center gap-2">
-                <GithubIcon /> GitHub
-              </span>
-            }
-            description={`Signed in as @${me.githubLogin}.`}
-          />
-        )}
+        <Row
+          title={
+            <span className="inline-flex items-center gap-2">
+              <GithubIcon /> GitHub
+            </span>
+          }
+          description={
+            me.githubLogin
+              ? `Connected as @${me.githubLogin}.${me.hasPassword ? " Either way of signing in opens these drafts." : ""}`
+              : "Connect it to sign in with one click. Your drafts stay the same."
+          }
+        >
+          {!me.githubLogin && (
+            <Button variant="outline" disabled={connecting} onClick={connectGithub}>
+              {connecting ? "Opening GitHub…" : "Connect GitHub"}
+            </Button>
+          )}
+        </Row>
       </Card>
 
       <Card
@@ -140,9 +182,15 @@ export function AccountSettings({ drafts, labels }: { drafts: Draft[]; labels: L
             Sign out
           </Button>
         </Row>
+        <Row title="Delete account" description="Removes your writing, labels, sites and profile for good. This can't be undone.">
+          <Button variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleting(true)}>
+            Delete account
+          </Button>
+        </Row>
       </Card>
 
       <ChangePassword open={changing} onOpenChange={setChanging} />
+      <DeleteAccount open={deleting} onOpenChange={setDeleting} drafts={drafts} labels={labels} onDeleted={signOut} />
     </>
   );
 }
@@ -233,6 +281,89 @@ function ChangePassword({ open, onOpenChange }: { open: boolean; onOpenChange: (
             </Button>
             <Button type="submit" disabled={pending}>
               Change password
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+const GITHUB_RESULTS: Record<string, string> = {
+  linked: "GitHub is connected. You can sign in with it now.",
+  taken: "That GitHub account already signs in to a different account here, so it wasn't connected.",
+  expired: "That took too long, so GitHub wasn't connected. Try again.",
+  cancelled: "Connecting GitHub was cancelled.",
+  failed: "Couldn't connect GitHub. Try again.",
+};
+
+function DeleteAccount({
+  open,
+  onOpenChange,
+  drafts,
+  labels,
+  onDeleted,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  drafts: Draft[];
+  labels: Label[];
+  onDeleted: () => void;
+}) {
+  const deleteAccount = useMutation(api.account.deleteAccount);
+  const [typed, setTyped] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirm(e: FormEvent) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+    try {
+      await getDraftStore().clearOutbox();
+      await deleteAccount({});
+      onDeleted();
+    } catch {
+      setPending(false);
+      setError("Couldn't delete the account. Nothing was removed; try again.");
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => (setTyped(""), setError(null), onOpenChange(o))}>
+      <DialogContent className="sm:max-w-lg">
+        <form onSubmit={confirm} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogDescription>This can't be undone. Export your writing first if you want to keep it.</DialogDescription>
+          </DialogHeader>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/80">
+            <li>
+              Your {drafts.length} draft{drafts.length === 1 ? "" : "s"} and ideas, {labels.length} label{labels.length === 1 ? "" : "s"}, sites,
+              preferences and profile are deleted.
+            </li>
+            <li>Images you've pasted are deleted too, except ones pasted before this update, which weren't tracked.</li>
+            <li>Your username is freed and you're signed out everywhere.</li>
+            <li>If you connected GitHub, signing in with it again starts a new, empty account.</li>
+          </ul>
+          <Button type="button" variant="outline" className="self-start" onClick={() => exportEverything(drafts, labels)}>
+            <Download /> Export everything first
+          </Button>
+          <div className="flex flex-col gap-2">
+            <FieldLabel htmlFor="confirm-delete">Type delete to confirm</FieldLabel>
+            <Input id="confirm-delete" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" disabled={pending} />
+          </div>
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="destructive" disabled={pending || typed.trim().toLowerCase() !== "delete"}>
+              {pending ? "Deleting…" : "Delete my account"}
             </Button>
           </DialogFooter>
         </form>

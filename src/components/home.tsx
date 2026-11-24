@@ -4,7 +4,7 @@ import { MicButton } from "@/components/mic-button";
 import { Button } from "@/components/ui/button";
 import { type Draft, getDraftStore } from "@/lib/drafts";
 import { HAND, IDEA_TINTS, type Label, VOICE } from "@/lib/look";
-import { newDraft, newVoice, useNav } from "@/lib/nav";
+import { newDraft, speak, useNav } from "@/lib/nav";
 import { PLATFORMS, type Site, destinationsFor, sitePlatform } from "@/lib/platforms";
 import { usePrefs } from "@/lib/prefs";
 import { ago, excerpt, wordCount } from "@/lib/text";
@@ -19,10 +19,10 @@ export function Home({ drafts, labels, sites }: { drafts: Draft[]; labels: Label
   const recent = drafts.filter((d) => d.stage !== "idea" && labelled(d)).slice(0, 6);
   const usedLabels = labels.filter((l) => drafts.some((d) => d.stage !== "idea" && d.labels.includes(l.clientId)));
 
-  const speak = (
+  const speakCard = (
     <ModeCard
       key="speak"
-      onClick={() => go(newVoice())}
+      onClick={() => go(speak(prefs.voiceFullscreen))}
       tint={VOICE.soft}
       button={VOICE.solid}
       icon={<Mic />}
@@ -31,7 +31,7 @@ export function Home({ drafts, labels, sites }: { drafts: Draft[]; labels: Label
       action="Start speaking"
     />
   );
-  const write = (
+  const writeCard = (
     <ModeCard
       key="write"
       onClick={() => go(newDraft())}
@@ -53,7 +53,7 @@ export function Home({ drafts, labels, sites }: { drafts: Draft[]; labels: Label
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-4">{prefs.startWith === "write" ? [write, speak] : [speak, write]}</div>
+      <div className="flex flex-wrap gap-4">{prefs.startWith === "write" ? [writeCard, speakCard] : [speakCard, writeCard]}</div>
 
       {(prefs.ideaBox || ideas.length > 0) && (
         <section aria-labelledby="ideas-title" className="flex flex-col gap-3.5">

@@ -23,6 +23,19 @@ const Recognizer = () =>
 
 const canRecord = () => typeof MediaRecorder !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 
+/** The microphone picked in Preferences, kept per browser because device ids are. "" is the system default. */
+export const MIC_KEY = "mic";
+export function chosenMic() {
+  try {
+    return localStorage.getItem(MIC_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+/** Starting the mic right after a click; on a plain page load the browser may refuse, so wait for a tap. */
+export const canAutoStart = () => navigator.userActivation?.isActive ?? true;
+
 // Once the browser's recognition fails to reach its service (Brave, Arc), record
 // and upload for the rest of the visit. Browsers without it (Firefox) start here.
 let recordMode = false;
@@ -78,7 +91,11 @@ export function useDictation({ onText, onInterim }: { onText: (text: string) => 
   const record = async () => {
     let stream: MediaStream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mic = chosenMic();
+      stream = await navigator.mediaDevices
+        .getUserMedia({ audio: mic ? { deviceId: { exact: mic } } : true })
+        // A picked mic that's been unplugged: use the default rather than fail.
+        .catch((e) => (mic && e?.name === "OverconstrainedError" ? navigator.mediaDevices.getUserMedia({ audio: true }) : Promise.reject(e)));
     } catch (e) {
       return window.alert(message(e instanceof Error ? e.name : String(e)));
     }
@@ -194,7 +211,8 @@ export function useDictation({ onText, onInterim }: { onText: (text: string) => 
   const toggle = () => {
     if (stop.current) return stop.current();
     track("dictation_started");
-    if (recordMode || prefs.listen === "record" || !Recognizer()) void record();
+    // Live recognition always hears the system default mic, so a picked one means recording.
+    if (recordMode || prefs.listen === "record" || chosenMic() || !Recognizer()) void record();
     else listen();
   };
 
@@ -206,8 +224,17 @@ export function useDictation({ onText, onInterim }: { onText: (text: string) => 
   return { supported, state, toggle, start };
 }
 
-export function MicButton({ onText, className, ...props }: { onText: (text: string) => void } & ComponentProps<typeof Toggle>) {
-  const { supported, state, toggle } = useDictation({ onText });
+export function MicButton({
+  onText,
+  autoStart,
+  className,
+  ...props
+}: { onText: (text: string) => void; autoStart?: boolean } & ComponentProps<typeof Toggle>) {
+  const { supported, state, toggle, start } = useDictation({ onText });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: start once, when the mic is known to work
+  useEffect(() => {
+    if (autoStart && supported && canAutoStart()) start();
+  }, [supported]);
   if (!supported) return null;
   const busy = state === "transcribing";
   return (

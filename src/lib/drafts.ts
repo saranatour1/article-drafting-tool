@@ -69,6 +69,8 @@ function createDraftStore() {
     drafts,
     /** Writes still waiting for the server (offline, or in flight). */
     pendingCount: () => executor.getPendingCount(),
+    /** Drop unsent writes, so a deleted account's drafts can't replay into the next one here. */
+    clearOutbox: () => executor.clearOutbox(),
     saveDraft: executor.createOfflineAction<Draft>({
       mutationFnName: "saveDraft",
       onMutate: (draft) => {

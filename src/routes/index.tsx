@@ -12,8 +12,8 @@ import { Settings } from "@/components/settings";
 import { VoiceMode } from "@/components/voice-mode";
 import { convex } from "@/lib/convex";
 import { type Draft, useDrafts } from "@/lib/drafts";
-import { type Me, PrefsProvider } from "@/lib/prefs";
-import { parseView, useNav } from "@/lib/nav";
+import { type Me, PrefsProvider, usePrefs } from "@/lib/prefs";
+import { newDraft, parseView, speak, useNav } from "@/lib/nav";
 import { getSession } from "@/lib/session";
 import { api } from "../../convex/_generated/api";
 
@@ -64,8 +64,21 @@ function Gate() {
   );
 }
 
+// The app opens where Preferences say, once per page load; Home after that.
+let opened = false;
+
 function Workspace({ drafts }: { drafts: Draft[] }) {
   const { view, go } = useNav();
+  const { prefs } = usePrefs();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: decided once, on the first render
+  useEffect(() => {
+    if (opened) return;
+    opened = true;
+    if (view.d || view.s || view.label || view.github) return; // opened on something specific
+    if (prefs.startWith === "speak") go(speak(prefs.voiceFullscreen));
+    else if (prefs.startWith === "write") go(newDraft());
+  }, []);
   const labels = useQuery(api.labels.list) ?? [];
   const sites = useQuery(api.sites.list) ?? [];
 
@@ -75,7 +88,7 @@ function Workspace({ drafts }: { drafts: Draft[] }) {
   const paneKey = view.d === "new" ? `new-${view.n}` : view.d && (createdKeys.current.get(view.d) ?? view.d);
   const onCreated = (clientId: string) => {
     createdKeys.current.set(clientId, paneKey!);
-    go({ ...view, d: clientId, n: undefined }, { replace: true });
+    go({ ...view, d: clientId, n: undefined, dictate: undefined }, { replace: true });
   };
   const draft = drafts.find((d) => d.clientId === view.d);
 

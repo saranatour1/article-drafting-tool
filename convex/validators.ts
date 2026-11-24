@@ -22,6 +22,7 @@ export const prefs = v.object({
   ideaBox: v.optional(v.boolean()),
   language: v.optional(v.string()), // dictation; missing means the browser's
   listen: v.optional(v.union(v.literal("auto"), v.literal("record"))),
+  voiceFullscreen: v.optional(v.boolean()), // Speak opens the big listening view, else the editor's mic
   checks: v.optional(v.boolean()),
   checksOff: v.optional(v.array(v.string())), // writing-check rules turned off
   destinations: v.optional(v.array(v.string())), // preview tabs a new draft starts with

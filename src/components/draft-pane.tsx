@@ -37,10 +37,11 @@ export function DraftPane({
   onDeleted: () => void;
 }) {
   const { me, prefs } = usePrefs();
-  const { go } = useNav();
+  const { view: url, go } = useNav();
+  const dictating = url.dictate === true && !draft;
   const { view, latest, id, saved, change, flush, remove } = useDraft(
     draft,
-    { source: "typed", destinations: null },
+    { source: dictating ? "voice" : "typed", destinations: null },
     onCreated,
   );
   const preview = useDeferredValue(view);
@@ -181,7 +182,12 @@ export function DraftPane({
             )}
           </div>
 
-          <Editor initialMarkdown={latest.current.markdown} onChange={(markdown) => change({ markdown })} platform={platform} />
+          <Editor
+            initialMarkdown={latest.current.markdown}
+            onChange={(markdown) => change({ markdown })}
+            platform={platform}
+            dictate={dictating}
+          />
         </section>
 
         <section

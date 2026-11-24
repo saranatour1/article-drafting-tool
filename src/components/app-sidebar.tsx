@@ -2,7 +2,8 @@ import { FileText, House, Lightbulb, Lock, Mic, PenLine, Plus, Search } from "lu
 import { useEffect, useRef, useState } from "react";
 import type { Draft } from "@/lib/drafts";
 import { HAND, type Label, VOICE } from "@/lib/look";
-import { newDraft, newVoice, useNav } from "@/lib/nav";
+import { newDraft, speak, useNav } from "@/lib/nav";
+import { usePrefs } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
 import { AccountMenu } from "./account-menu";
 import { LabelDot } from "./bits";
@@ -12,6 +13,7 @@ const navItem =
 
 export function AppSidebar({ drafts, labels }: { drafts: Draft[]; labels: Label[] }) {
   const { view, go } = useNav();
+  const { prefs } = usePrefs();
   const [query, setQuery] = useState("");
   const search = useRef<HTMLInputElement>(null);
 
@@ -77,7 +79,7 @@ export function AppSidebar({ drafts, labels }: { drafts: Draft[]; labels: Label[
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
-          onClick={() => go(newVoice())}
+          onClick={() => go(speak(prefs.voiceFullscreen))}
           className={cn("flex h-10 items-center gap-2 rounded-[10px] border px-3 text-[13px] font-semibold", VOICE.soft)}
         >
           <Mic className="size-4" /> Speak

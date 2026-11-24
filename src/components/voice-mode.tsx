@@ -1,6 +1,6 @@
 import { ArrowLeft, Check, Keyboard, Lightbulb, Mic, Pause } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useDictation } from "@/components/mic-button";
+import { canAutoStart, useDictation } from "@/components/mic-button";
 import { Button } from "@/components/ui/button";
 import type { Draft } from "@/lib/drafts";
 import { VOICE } from "@/lib/look";
@@ -33,7 +33,7 @@ export function VoiceMode({ draft, onCreated }: { draft: Draft | undefined; onCr
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: start once, when the mic is known to work
   useEffect(() => {
-    if (mic.supported) mic.start();
+    if (mic.supported && canAutoStart()) mic.start();
   }, [mic.supported]);
 
   useEffect(() => {
@@ -114,7 +114,11 @@ export function VoiceMode({ draft, onCreated }: { draft: Draft | undefined; onCr
             )}
             {!view.markdown && !heard && (
               <p className="text-muted-foreground">
-                {mic.supported ? "Start talking. Pauses are fine." : "This browser can't record audio. Switch to typing instead."}
+                {!mic.supported
+                  ? "This browser can't record audio. Switch to typing instead."
+                  : listening
+                    ? "Start talking. Pauses are fine."
+                    : "Tap the mic below to start talking."}
               </p>
             )}
           </div>

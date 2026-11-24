@@ -1,4 +1,4 @@
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,15 +32,20 @@ export function DestinationsDialog({
   title?: string;
 }) {
   const [picked, setPicked] = useState(value);
+  const [query, setQuery] = useState("");
   useEffect(() => {
-    if (open) setPicked(value);
+    if (open) {
+      setPicked(value);
+      setQuery("");
+    }
   }, [open, value]);
+  const matches = (p: Platform) => `${p.label} ${p.summary}`.toLowerCase().includes(query.trim().toLowerCase());
 
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
   const groups: [string, Platform[]][] = [
-    ["Blogs and newsletters", PLATFORMS.filter((p) => p.group === "blog")],
-    ["Social", PLATFORMS.filter((p) => p.group === "social")],
-    ["Your own", sites.map(sitePlatform)],
+    ["Blogs and newsletters", PLATFORMS.filter((p) => p.group === "blog" && matches(p))],
+    ["Social", PLATFORMS.filter((p) => p.group === "social" && matches(p))],
+    ["Your own", sites.map(sitePlatform).filter(matches)],
   ];
   const names = [...PLATFORMS, ...sites.map(sitePlatform)].filter((p) => picked.includes(p.id) && p.id !== PLAIN.id);
 
@@ -54,6 +59,18 @@ export function DestinationsDialog({
             site.
           </DialogDescription>
         </DialogHeader>
+
+        <label className="flex h-9.5 items-center gap-2 rounded-[10px] border bg-background px-3 text-muted-foreground shadow-xs focus-within:ring-3 focus-within:ring-ring/50">
+          <Search className="size-4 shrink-0" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search destinations"
+            aria-label="Search destinations"
+            className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          />
+        </label>
 
         <section aria-labelledby="g-words" className="flex flex-col gap-2.5">
           <h3 id="g-words" className="text-xs font-medium text-muted-foreground">
@@ -71,7 +88,11 @@ export function DestinationsDialog({
           </div>
         </section>
 
+        {query.trim() && groups.every(([, platforms]) => platforms.length === 0) && (
+          <p className="text-sm text-muted-foreground">Nothing matches “{query.trim()}”. You can add it as your own site.</p>
+        )}
         {groups.map(([name, platforms]) => (
+          (platforms.length > 0 || name === "Your own") && (
           <section key={name} aria-label={name} className="flex flex-col gap-2.5">
             <h3 className="text-xs font-medium text-muted-foreground">{name}</h3>
             <div className="flex flex-wrap gap-2.5">
@@ -122,6 +143,7 @@ export function DestinationsDialog({
               )}
             </div>
           </section>
+          )
         ))}
 
         <DialogFooter className="items-center sm:justify-between">

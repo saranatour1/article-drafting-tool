@@ -1,5 +1,7 @@
 import { Check, Globe, Mic, PenLine, Plus, Sun, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { MIC_KEY, chosenMic } from "@/components/mic-button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -76,18 +78,18 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
         </Row>
       </Card>
 
-      <Card icon={<PenLine />} tint={HAND.soft} title="Starting something new" description="Which way to start comes first on Home, and whether the idea box is there.">
+      <Card icon={<PenLine />} tint={HAND.soft} title="Where the app opens" description="What's waiting when you open the app. Home shows that way to start first, too.">
         <RadioGroup
-          aria-label="Starting something new"
+          aria-label="Where the app opens"
           value={prefs.startWith}
           onValueChange={set("startWith") as (v: string) => void}
           className="flex flex-wrap gap-2.5 border-t px-5 py-4"
         >
           {(
             [
-              ["speak", "Speak first", "Talk it through comes first.", cn(VOICE.soft, "has-[[data-state=checked]]:ring-violet-300 dark:has-[[data-state=checked]]:ring-violet-500/40")],
-              ["write", "Write first", "Write it out comes first.", cn(HAND.soft, "has-[[data-state=checked]]:ring-orange-300 dark:has-[[data-state=checked]]:ring-orange-500/40")],
-              ["ask", "Let me pick", "Both, side by side.", "bg-background has-[[data-state=checked]]:border-foreground has-[[data-state=checked]]:ring-border"],
+              ["speak", "Start talking", "Opens straight into dictation.", cn(VOICE.soft, "has-[[data-state=checked]]:ring-violet-300 dark:has-[[data-state=checked]]:ring-violet-500/40")],
+              ["write", "Start writing", "Opens a blank page, cursor ready.", cn(HAND.soft, "has-[[data-state=checked]]:ring-orange-300 dark:has-[[data-state=checked]]:ring-orange-500/40")],
+              ["ask", "Show Home", "Both ways to start, side by side.", "bg-card has-[[data-state=checked]]:border-foreground has-[[data-state=checked]]:ring-border"],
             ] as const
           ).map(([value, title, text, look]) => (
             <label key={value} className={cn(choice, "flex-[1_1_180px]", look)}>
@@ -140,6 +142,14 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
             ))}
           </RadioGroup>
         </div>
+        <MicPicker />
+        <Row
+          title="Full screen for Speak"
+          description="Speak opens the big listening view. Off, it opens a draft with the mic already on. The mic in the editor always stays inline."
+          htmlFor="voice-fullscreen"
+        >
+          <Switch id="voice-fullscreen" checked={prefs.voiceFullscreen} onCheckedChange={set("voiceFullscreen")} />
+        </Row>
       </Card>
 
       <Card
@@ -219,5 +229,68 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
         onAddSite={() => go({ s: "labels" })}
       />
     </>
+  );
+}
+
+/** Device ids belong to this browser, so the choice lives in localStorage, not the account. */
+function MicPicker() {
+  const [mics, setMics] = useState<MediaDeviceInfo[]>([]);
+  const [mic, setMic] = useState("");
+
+  async function load() {
+    setMics((await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "audioinput"));
+  }
+  useEffect(() => {
+    setMic(chosenMic());
+    if (!navigator.mediaDevices?.enumerateDevices) return;
+    void load();
+    navigator.mediaDevices.addEventListener("devicechange", load);
+    return () => navigator.mediaDevices.removeEventListener("devicechange", load);
+  }, []);
+
+  // Browsers hide device names until the page has had mic access once.
+  async function showNames() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      for (const track of stream.getTracks()) track.stop();
+      await load();
+    } catch {
+      window.alert("Microphone access is blocked. Allow it in your browser's site settings to see the names.");
+    }
+  }
+
+  function pick(id: string) {
+    setMic(id);
+    try {
+      if (id) localStorage.setItem(MIC_KEY, id);
+      else localStorage.removeItem(MIC_KEY);
+    } catch {} // private mode: the default mic it is
+  }
+
+  const unnamed = mics.length > 0 && mics.every((m) => !m.label);
+  return (
+    <Row
+      title="Microphone"
+      description="Saved for this browser. Picking one records and transcribes, since live recognition always listens on the system default."
+      htmlFor="mic"
+    >
+      <div className="flex items-center gap-2">
+        {unnamed && (
+          <Button variant="ghost" onClick={showNames}>
+            Show names
+          </Button>
+        )}
+        <NativeSelect id="mic" value={mic} onChange={(e) => pick(e.target.value)} className="w-64">
+          <NativeSelectOption value="">System default</NativeSelectOption>
+          {mics
+            .filter((m) => m.deviceId && m.deviceId !== "default")
+            .map((m, i) => (
+              <NativeSelectOption key={m.deviceId} value={m.deviceId}>
+                {m.label || `Microphone ${i + 1}`}
+              </NativeSelectOption>
+            ))}
+        </NativeSelect>
+      </div>
+    </Row>
   );
 }

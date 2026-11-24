@@ -17,6 +17,7 @@ export const DEFAULT_PREFS: Prefs = {
   ideaBox: true,
   language: "", // the browser's
   listen: "auto",
+  voiceFullscreen: true,
   checks: true,
   checksOff: [],
   // The four sites the app previewed before destinations were a choice.

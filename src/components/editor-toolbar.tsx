@@ -115,7 +115,16 @@ const refocus = (editor: Editor | null) => (e: Event) => {
 };
 
 /** The selected platform's formatting bar. Buttons light up for whatever is under the cursor. */
-export function EditorToolbar({ editor, platform }: { editor: Editor | null; platform: Platform }) {
+export function EditorToolbar({
+  editor,
+  platform,
+  dictate,
+}: {
+  editor: Editor | null;
+  platform: Platform;
+  /** Start the mic as the page opens: Speak, when Preferences says not to go full screen. */
+  dictate?: boolean;
+}) {
   const spec = editorFor(platform);
   const active = useEditorState({
     editor,
@@ -185,6 +194,7 @@ export function EditorToolbar({ editor, platform }: { editor: Editor | null; pla
           <TooltipTrigger asChild>
             <MicButton
               size="lg"
+              autoStart={dictate}
               disabled={!editor}
               onText={(text) => editor?.chain().focus().insertContent(text + " ").run()}
             />

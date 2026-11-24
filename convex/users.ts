@@ -95,6 +95,7 @@ export const setAvatar = mutation({
       return "Pick an image up to 5 MB.";
     }
     await ctx.db.patch("users", user._id, { avatarUrl: url });
+    await ctx.db.insert("uploads", { userId: user._id, storageId });
     return null;
   },
 });

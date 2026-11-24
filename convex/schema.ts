@@ -32,4 +32,6 @@ export default defineSchema({
     color: labelColor,
   }).index("by_user_client", ["userId", "clientId"]),
   sites: defineTable({ userId: v.id("users"), ...siteFields }).index("by_user_client", ["userId", "clientId"]),
+  // Files a user uploaded (pasted images, avatars), so deleting the account can delete them.
+  uploads: defineTable({ userId: v.id("users"), storageId: v.id("_storage") }).index("by_user", ["userId"]),
 });
