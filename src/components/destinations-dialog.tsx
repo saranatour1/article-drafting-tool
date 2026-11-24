@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogPanel,
+  DialogPopup,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { PLAIN, PLATFORMS, type Platform, type Site, sitePlatform } from "@/lib/platforms";
@@ -51,16 +52,14 @@ export function DestinationsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-3xl">
+      <DialogPopup className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Pick as many as you like. Each one becomes a preview tab, with headings, tags and front matter shaped for that
             site.
           </DialogDescription>
-        </DialogHeader>
-
-        <label className="flex h-9.5 items-center gap-2 rounded-[10px] border bg-background px-3 text-muted-foreground shadow-xs focus-within:ring-3 focus-within:ring-ring/50">
+        <label className="mt-2 flex h-9.5 items-center gap-2 rounded-[10px] border bg-background px-3 text-muted-foreground shadow-xs focus-within:ring-3 focus-within:ring-ring/50">
           <Search className="size-4 shrink-0" />
           <input
             type="search"
@@ -71,7 +70,9 @@ export function DestinationsDialog({
             className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
         </label>
+        </DialogHeader>
 
+        <DialogPanel className="flex flex-col gap-5">
         <section aria-labelledby="g-words" className="flex flex-col gap-2.5">
           <h3 id="g-words" className="text-xs font-medium text-muted-foreground">
             Just the words
@@ -145,6 +146,7 @@ export function DestinationsDialog({
           </section>
           )
         ))}
+        </DialogPanel>
 
         <DialogFooter className="items-center sm:justify-between">
           <span className="text-sm text-muted-foreground">
@@ -164,7 +166,7 @@ export function DestinationsDialog({
             </Button>
           </div>
         </DialogFooter>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   );
 }

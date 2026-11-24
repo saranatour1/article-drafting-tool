@@ -21,7 +21,7 @@ const LANGUAGES = ["", "en-US", "en-GB", "en-AU", "en-IN", "ar", "de-DE", "es-ES
 const languageName = (code: string) =>
   code ? (new Intl.DisplayNames(["en"], { type: "language" }).of(code) ?? code) : "Same as my browser";
 
-const choice = "flex cursor-pointer flex-col gap-2.5 rounded-xl border p-3.5 has-[[data-state=checked]]:ring-3";
+const choice = "flex cursor-pointer flex-col gap-2.5 rounded-xl border p-3.5 has-[[data-checked]]:ring-3";
 
 export function PreferenceSettings({ sites }: { sites: Site[] }) {
   const { prefs, savePrefs } = usePrefs();
@@ -53,9 +53,9 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
           />
         </Row>
         <Row title="Writing font" description="Just for the page you write on. Previews follow each site.">
-          <RadioGroup aria-label="Writing font" value={prefs.writingFont} onValueChange={set("writingFont") as (v: string) => void} className="flex gap-2">
+          <RadioGroup aria-label="Writing font" value={prefs.writingFont} onValueChange={set("writingFont") as (v: string) => void} className="flex-row gap-2">
             {(["serif", "sans"] as const).map((font) => (
-              <label key={font} className={cn(choice, "w-26 gap-1.5 px-3 py-2.5 has-[[data-state=checked]]:border-foreground has-[[data-state=checked]]:ring-border")}>
+              <label key={font} className={cn(choice, "w-26 gap-1.5 px-3 py-2.5 has-[[data-checked]]:border-foreground has-[[data-checked]]:ring-border")}>
                 <span className={cn("text-[26px] leading-none", font === "serif" ? "font-serif" : "font-medium")}>Aa</span>
                 <span className="flex items-center gap-1.5 text-xs font-medium">
                   <RadioGroupItem value={font} /> {font === "serif" ? "Serif" : "Sans"}
@@ -83,13 +83,13 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
           aria-label="Where the app opens"
           value={prefs.startWith}
           onValueChange={set("startWith") as (v: string) => void}
-          className="flex flex-wrap gap-2.5 border-t px-5 py-4"
+          className="flex-row flex-wrap gap-2.5 border-t px-5 py-4"
         >
           {(
             [
-              ["speak", "Start talking", "Opens straight into dictation.", cn(VOICE.soft, "has-[[data-state=checked]]:ring-violet-300 dark:has-[[data-state=checked]]:ring-violet-500/40")],
-              ["write", "Start writing", "Opens a blank page, cursor ready.", cn(HAND.soft, "has-[[data-state=checked]]:ring-orange-300 dark:has-[[data-state=checked]]:ring-orange-500/40")],
-              ["ask", "Show Home", "Both ways to start, side by side.", "bg-card has-[[data-state=checked]]:border-foreground has-[[data-state=checked]]:ring-border"],
+              ["speak", "Start talking", "Opens straight into dictation.", cn(VOICE.soft, "has-[[data-checked]]:ring-violet-300 dark:has-[[data-checked]]:ring-violet-500/40")],
+              ["write", "Start writing", "Opens a blank page, cursor ready.", cn(HAND.soft, "has-[[data-checked]]:ring-orange-300 dark:has-[[data-checked]]:ring-orange-500/40")],
+              ["ask", "Show Home", "Both ways to start, side by side.", "bg-card has-[[data-checked]]:border-foreground has-[[data-checked]]:ring-border"],
             ] as const
           ).map(([value, title, text, look]) => (
             <label key={value} className={cn(choice, "flex-[1_1_180px]", look)}>
@@ -129,7 +129,7 @@ export function PreferenceSettings({ sites }: { sites: Site[] }) {
             ).map(([value, title, text]) => (
               <label
                 key={value}
-                className="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 has-[[data-state=checked]]:border-violet-600 has-[[data-state=checked]]:bg-violet-50/60 has-[[data-state=checked]]:ring-3 has-[[data-state=checked]]:ring-violet-200 dark:has-[[data-state=checked]]:bg-violet-500/10 dark:has-[[data-state=checked]]:ring-violet-500/25"
+                className="flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 has-[[data-checked]]:border-violet-600 has-[[data-checked]]:bg-violet-50/60 has-[[data-checked]]:ring-3 has-[[data-checked]]:ring-violet-200 dark:has-[[data-checked]]:bg-violet-500/10 dark:has-[[data-checked]]:ring-violet-500/25"
               >
                 <RadioGroupItem value={value} className="mt-0.5" />
                 <span className="flex flex-col gap-0.5">

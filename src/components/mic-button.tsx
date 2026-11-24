@@ -244,7 +244,7 @@ export function MicButton({
       disabled={busy || props.disabled}
       pressed={state === "listening"}
       onPressedChange={toggle}
-      className={cn(state === "listening" && "text-red-600 data-[state=on]:text-red-600 animate-pulse", className)}
+      className={cn(state === "listening" && "animate-pulse text-red-600 data-pressed:text-red-600", className)}
     >
       {busy ? <LoaderCircle className="animate-spin" /> : <Mic />}
     </Toggle>

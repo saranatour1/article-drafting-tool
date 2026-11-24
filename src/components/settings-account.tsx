@@ -3,7 +3,15 @@ import { Download, FileText, KeyRound, Lock, LogOut, User, X } from "lucide-reac
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { GithubIcon } from "@/components/auth-form";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogPopup,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label as FieldLabel } from "@/components/ui/label";
 import { type Draft, getDraftStore } from "@/lib/drafts";
@@ -183,7 +191,7 @@ export function AccountSettings({ drafts, labels }: { drafts: Draft[]; labels: L
           </Button>
         </Row>
         <Row title="Delete account" description="Removes your writing, labels, sites and profile for good. This can't be undone.">
-          <Button variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => setDeleting(true)}>
+          <Button variant="destructive-outline" onClick={() => setDeleting(true)}>
             Delete account
           </Button>
         </Row>
@@ -256,12 +264,13 @@ function ChangePassword({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
   return (
     <Dialog open={open} onOpenChange={(o) => (setError(null), onOpenChange(o))}>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={submit} className="flex flex-col gap-4">
+      <DialogPopup className="sm:max-w-md">
+        <form onSubmit={submit} className="flex min-h-0 flex-col">
           <DialogHeader>
             <DialogTitle>Change password</DialogTitle>
             <DialogDescription>Other browsers you're signed in on will be signed out.</DialogDescription>
           </DialogHeader>
+          <DialogPanel className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <FieldLabel htmlFor="current-password">Current password</FieldLabel>
             <Input id="current-password" name="current" type="password" autoComplete="current-password" required disabled={pending} />
@@ -271,10 +280,11 @@ function ChangePassword({ open, onOpenChange }: { open: boolean; onOpenChange: (
             <Input id="new-password" name="new" type="password" autoComplete="new-password" required disabled={pending} />
           </div>
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive-foreground">
               {error}
             </p>
           )}
+          </DialogPanel>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -284,7 +294,7 @@ function ChangePassword({ open, onOpenChange }: { open: boolean; onOpenChange: (
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   );
 }
@@ -331,12 +341,13 @@ function DeleteAccount({
 
   return (
     <Dialog open={open} onOpenChange={(o) => (setTyped(""), setError(null), onOpenChange(o))}>
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={confirm} className="flex flex-col gap-4">
+      <DialogPopup className="sm:max-w-lg">
+        <form onSubmit={confirm} className="flex min-h-0 flex-col">
           <DialogHeader>
             <DialogTitle>Delete your account?</DialogTitle>
             <DialogDescription>This can't be undone. Export your writing first if you want to keep it.</DialogDescription>
           </DialogHeader>
+          <DialogPanel className="flex flex-col gap-4">
           <ul className="list-disc space-y-1 pl-5 text-sm text-foreground/80">
             <li>
               Your {drafts.length} draft{drafts.length === 1 ? "" : "s"} and ideas, {labels.length} label{labels.length === 1 ? "" : "s"}, sites,
@@ -354,10 +365,11 @@ function DeleteAccount({
             <Input id="confirm-delete" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" disabled={pending} />
           </div>
           {error && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="text-sm text-destructive-foreground">
               {error}
             </p>
           )}
+          </DialogPanel>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
@@ -367,7 +379,7 @@ function DeleteAccount({
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </DialogPopup>
     </Dialog>
   );
 }

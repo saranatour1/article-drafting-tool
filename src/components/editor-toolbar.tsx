@@ -23,17 +23,17 @@ import {
 } from "lucide-react";
 import { MicButton } from "@/components/mic-button";
 import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Menu,
+  MenuItem,
+  MenuPopup,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuShortcut,
+  MenuTrigger,
+} from "@/components/ui/menu";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type Platform, type ToolId, editorFor } from "@/lib/platforms";
@@ -109,9 +109,10 @@ const shortcut = (keys: string) =>
     : keys.replace("Mod", "Ctrl").replaceAll("-", "+");
 
 // Return focus to the text when a menu closes, not to its button, so typing carries on.
-const refocus = (editor: Editor | null) => (e: Event) => {
-  e.preventDefault();
+// A closed menu hands focus back to the text, not to its button.
+const refocus = (editor: Editor | null) => () => {
   editor?.commands.focus();
+  return false;
 };
 
 /** The selected platform's formatting bar. Buttons light up for whatever is under the cursor. */
@@ -143,47 +144,50 @@ export function EditorToolbar({
   const styles = spec.bodyStyle ? [{ ...STYLES[0], label: spec.bodyStyle }, ...STYLES.slice(1)] : STYLES;
 
   return (
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delay={300}>
       <div role="toolbar" aria-label={`${platform.label} formatting`} className="flex items-center gap-0.5">
         {spec.tools.map((id) => {
           if (id === "style") {
             return (
-              <DropdownMenu key={id}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="lg" disabled={!editor} className="mr-1 font-semibold">
-                    {spec.bodyStyle ? styles.find((s) => s.value === style)!.label : "Style"} <ChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" onCloseAutoFocus={refocus(editor)}>
-                  <DropdownMenuRadioGroup value={style}>
+              <Menu key={id}>
+                <MenuTrigger
+                  disabled={!editor}
+                  render={<Button variant="ghost" size="lg" className="mr-1 font-semibold" />}
+                >
+                  {spec.bodyStyle ? styles.find((s) => s.value === style)!.label : "Style"} <ChevronDown />
+                </MenuTrigger>
+                <MenuPopup align="start" finalFocus={refocus(editor)}>
+                  <MenuRadioGroup value={style}>
                     {styles.map((s) => (
-                      <DropdownMenuRadioItem key={s.value} value={s.value} onSelect={() => editor && s.run(editor)}>
+                      <MenuRadioItem key={s.value} value={s.value} closeOnClick onClick={() => editor && s.run(editor)}>
                         {s.label}
-                      </DropdownMenuRadioItem>
+                      </MenuRadioItem>
                     ))}
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </MenuRadioGroup>
+                </MenuPopup>
+              </Menu>
             );
           }
           const item = TOOLS[id];
           const Icon = id === "heading" && active?.h2 ? Heading2 : id === "heading" && active?.h3 ? Heading3 : item.icon;
           return (
             <Tooltip key={id}>
-              <TooltipTrigger asChild>
-                <Toggle
-                  size="lg"
-                  aria-label={item.label}
-                  pressed={Boolean(item.active && active?.[item.active])}
-                  onClick={() => editor && item.run(editor)}
-                  disabled={!editor}
-                >
-                  <Icon />
-                </Toggle>
+              <TooltipTrigger
+                render={
+                  <Toggle
+                    size="lg"
+                    aria-label={item.label}
+                    pressed={Boolean(item.active && active?.[item.active])}
+                    onClick={() => editor && item.run(editor)}
+                    disabled={!editor}
+                  />
+                }
+              >
+                <Icon />
               </TooltipTrigger>
               <TooltipContent>
                 {item.label}
-                {item.keys && <kbd className="ml-2 font-sans opacity-70">{shortcut(item.keys)}</kbd>}
+                {item.keys && <Kbd className="ml-2">{shortcut(item.keys)}</Kbd>}
               </TooltipContent>
             </Tooltip>
           );
@@ -191,36 +195,37 @@ export function EditorToolbar({
         <span className="ml-auto pr-1 text-xs whitespace-nowrap text-muted-foreground">{platform.label} tools</span>
         {/* Not one of the platform's tools: no site has a mic, so it sits outside spec.tools. */}
         <Tooltip>
-          <TooltipTrigger asChild>
-            <MicButton
-              size="lg"
-              autoStart={dictate}
-              disabled={!editor}
-              onText={(text) => editor?.chain().focus().insertContent(text + " ").run()}
-            />
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <MicButton
+                size="lg"
+                autoStart={dictate}
+                disabled={!editor}
+                onText={(text) => editor?.chain().focus().insertContent(text + " ").run()}
+              />
+            }
+          />
           <TooltipContent>Dictate</TooltipContent>
         </Tooltip>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-lg" aria-label="More formatting" disabled={!editor}>
-              <EllipsisVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onCloseAutoFocus={refocus(editor)}>
+        <Menu>
+          <MenuTrigger
+            disabled={!editor}
+            render={<Button variant="ghost" size="icon-lg" aria-label="More formatting" />}
+          >
+            <EllipsisVertical />
+          </MenuTrigger>
+          <MenuPopup align="end" finalFocus={refocus(editor)}>
             {[...(spec.more ?? []).map((id) => TOOLS[id as Exclude<ToolId, "style">]), ...HISTORY].map((item) => (
-              <DropdownMenuItem key={item.label} onSelect={() => editor && item.run(editor)}>
+              <MenuItem key={item.label} onClick={() => editor && item.run(editor)}>
                 <item.icon />
                 {item.label}
-                {item.keys && <DropdownMenuShortcut>{shortcut(item.keys)}</DropdownMenuShortcut>}
-              </DropdownMenuItem>
+                {item.keys && <MenuShortcut>{shortcut(item.keys)}</MenuShortcut>}
+              </MenuItem>
             ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="font-normal text-muted-foreground">
-              Type / in the text for more blocks
-            </DropdownMenuLabel>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <MenuSeparator />
+            <p className="px-2 py-1.5 text-xs text-muted-foreground">Type / in the text for more blocks</p>
+          </MenuPopup>
+        </Menu>
       </div>
     </TooltipProvider>
   );

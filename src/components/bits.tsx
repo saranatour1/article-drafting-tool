@@ -1,3 +1,4 @@
+import { SegmentedControl, SegmentedControlItem } from "@/components/ui/segmented-control";
 import { authorName, type Me } from "@/lib/prefs";
 import { LABEL_COLORS, type Label } from "@/lib/look";
 import type { Platform } from "@/lib/platforms";
@@ -118,7 +119,7 @@ export function Row({
   );
 }
 
-/** Two to four buttons that act as one choice. */
+/** Two to four buttons that act as one choice; coss's segmented control slides its highlight to the pressed one. */
 export function Segmented<T extends string>({
   label,
   value,
@@ -131,19 +132,19 @@ export function Segmented<T extends string>({
   onChange: (value: T) => void;
 }) {
   return (
-    <div role="group" aria-label={label} className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
+    <SegmentedControl role="group" aria-label={label}>
       {options.map((o) => (
-        <button
+        <SegmentedControlItem
           key={o.value}
-          type="button"
           aria-pressed={o.value === value}
+          data-pressed={o.value === value ? "" : undefined}
           aria-label={o.title}
           onClick={() => onChange(o.value)}
-          className="flex h-7.5 items-center justify-center gap-1.5 rounded-lg px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-background aria-pressed:text-foreground aria-pressed:shadow-xs [&_svg]:size-3.5"
+          className="gap-1.5 [&_svg]:size-3.5"
         >
           {o.label}
-        </button>
+        </SegmentedControlItem>
       ))}
-    </div>
+    </SegmentedControl>
   );
 }

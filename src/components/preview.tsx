@@ -2,7 +2,7 @@ import { track } from "@databuddy/sdk";
 import { Check, Copy, Download, Moon, Plus, Sun } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { download } from "@/lib/export";
 import { type Platform, type RenderOptions, renderForPlatform } from "@/lib/platforms";
 import { PlatformMark } from "./bits";
@@ -23,13 +23,13 @@ export function Preview({
   return (
     <Tabs value={platformId} onValueChange={onPlatformChange} className="gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {/* Wraps when a draft goes to many places; the stock list is one fixed-height row. */}
-        <TabsList aria-label="Preview as" className="flex-wrap justify-start group-data-horizontal/tabs:h-auto">
+        {/* Wraps when a draft goes to many places. */}
+        <TabsList aria-label="Preview as" className="flex-wrap justify-start">
           {platforms.map((p) => (
-            <TabsTrigger key={p.id} value={p.id} className="h-7 flex-none gap-1.5 px-2">
+            <TabsTab key={p.id} value={p.id} className="grow-0 gap-1.5">
               <PlatformMark platform={p} className="size-4.5" />
               {p.label}
-            </TabsTrigger>
+            </TabsTab>
           ))}
         </TabsList>
         <Button variant="outline" size="sm" className="border-dashed" onClick={onAdd}>
@@ -37,9 +37,9 @@ export function Preview({
         </Button>
       </div>
       {platforms.map((p) => (
-        <TabsContent key={p.id} value={p.id}>
+        <TabsPanel key={p.id} value={p.id}>
           <PlatformPreview platform={p} {...props} />
-        </TabsContent>
+        </TabsPanel>
       ))}
     </Tabs>
   );

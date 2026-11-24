@@ -5,6 +5,7 @@ import { HAND, type Label, VOICE } from "@/lib/look";
 import { newDraft, speak, useNav } from "@/lib/nav";
 import { usePrefs } from "@/lib/prefs";
 import { cn } from "@/lib/utils";
+import { Kbd } from "@/components/ui/kbd";
 import { AccountMenu } from "./account-menu";
 import { LabelDot } from "./bits";
 
@@ -73,7 +74,7 @@ export function AppSidebar({ drafts, labels }: { drafts: Draft[]; labels: Label[
           aria-label="Search your writing"
           className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
         />
-        <kbd className="rounded border px-1 text-[11px] font-medium">⌘K</kbd>
+        <Kbd>⌘K</Kbd>
       </label>
 
       <div className="grid grid-cols-2 gap-2">
