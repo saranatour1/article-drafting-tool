@@ -1,9 +1,10 @@
 import { track } from "@databuddy/sdk";
 import { Check, Copy, Download, Moon, Plus, Sun } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useReducer, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { download } from "@/lib/export";
+import { type LinkPreview, loneLinks, withCards } from "@/lib/link-preview";
 import { type Platform, type RenderOptions, renderForPlatform } from "@/lib/platforms";
 import { PlatformMark } from "./bits";
 
@@ -11,6 +12,33 @@ type Props = { title: string; markdown: string; tags: string[]; author: string; 
 
 // dev.to colors each tag from its own database; a stable hue per name stands in.
 const tagHue = (tag: string) => [...tag].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+
+// One fetch per link per page load, shared by every tab; null when the page has no card.
+const unfurls = new Map<string, Promise<unknown>>();
+const cards = new Map<string, LinkPreview | null>();
+
+/** The preview HTML with a card for each link on its own line, the way the sites embed them. */
+function useLinkCards(html: string) {
+  const [, refresh] = useReducer((n: number) => n + 1, 0);
+  const waiting = loneLinks(html).filter((url) => !cards.has(url)).join("\n");
+  useEffect(() => {
+    if (!waiting) return;
+    // After typing stops, so a URL typed out by hand isn't fetched once per keystroke.
+    const timer = setTimeout(() => {
+      for (const url of waiting.split("\n")) {
+        if (!unfurls.has(url)) {
+          const card = fetch(`/unfurl?url=${encodeURIComponent(url)}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null);
+          unfurls.set(url, card.then((c: LinkPreview | null) => cards.set(url, c)));
+        }
+        unfurls.get(url)!.then(refresh);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [waiting]);
+  return withCards(html, cards);
+}
 
 /** One tab per destination the draft is headed to; Add opens the destinations dialog. */
 export function Preview({
@@ -50,6 +78,8 @@ function PlatformPreview({ platform, title, markdown, tags, author, options }: P
     () => renderForPlatform(platform, title, markdown, tags, options),
     [platform, title, markdown, tags, options],
   );
+  // Cards are only for looking at: the copy keeps the bare link, which the sites turn into their own embed.
+  const shown = useLinkCards(out.html);
   const [copied, setCopied] = useState<"rich" | "md" | null>(null);
   const [dark, setDark] = useState(true);
 
@@ -117,7 +147,7 @@ function PlatformPreview({ platform, title, markdown, tags, author, options }: P
               </div>
             )}
           </header>
-          <div className="preview-body" dangerouslySetInnerHTML={{ __html: out.html }} />
+          <div className="preview-body" dangerouslySetInnerHTML={{ __html: shown }} />
         </article>
       </div>
       <div className="flex flex-wrap items-center gap-2">

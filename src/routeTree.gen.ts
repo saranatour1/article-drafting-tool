@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LinkGithubRouteImport } from './routes/link-github'
 import { Route as TranscribeRouteImport } from './routes/transcribe'
+import { Route as UnfurlRouteImport } from './routes/unfurl'
 import { Route as AuthActionRouteImport } from './routes/auth.$action'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const TranscribeRoute = TranscribeRouteImport.update({
   path: '/transcribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UnfurlRoute = UnfurlRouteImport.update({
+  id: '/unfurl',
+  path: '/unfurl',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthActionRoute = AuthActionRouteImport.update({
   id: '/auth/$action',
   path: '/auth/$action',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/link-github': typeof LinkGithubRoute
   '/transcribe': typeof TranscribeRoute
+  '/unfurl': typeof UnfurlRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/link-github': typeof LinkGithubRoute
   '/transcribe': typeof TranscribeRoute
+  '/unfurl': typeof UnfurlRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/link-github': typeof LinkGithubRoute
   '/transcribe': typeof TranscribeRoute
+  '/unfurl': typeof UnfurlRoute
   '/auth/$action': typeof AuthActionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/link-github' | '/transcribe' | '/auth/$action'
+  fullPaths: '/' | '/link-github' | '/transcribe' | '/unfurl' | '/auth/$action'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/link-github' | '/transcribe' | '/auth/$action'
-  id: '__root__' | '/' | '/link-github' | '/transcribe' | '/auth/$action'
+  to: '/' | '/link-github' | '/transcribe' | '/unfurl' | '/auth/$action'
+  id:
+    | '__root__'
+    | '/'
+    | '/link-github'
+    | '/transcribe'
+    | '/unfurl'
+    | '/auth/$action'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LinkGithubRoute: typeof LinkGithubRoute
   TranscribeRoute: typeof TranscribeRoute
+  UnfurlRoute: typeof UnfurlRoute
   AuthActionRoute: typeof AuthActionRoute
 }
 
@@ -92,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TranscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/unfurl': {
+      id: '/unfurl'
+      path: '/unfurl'
+      fullPath: '/unfurl'
+      preLoaderRoute: typeof UnfurlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/$action': {
       id: '/auth/$action'
       path: '/auth/$action'
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LinkGithubRoute: LinkGithubRoute,
   TranscribeRoute: TranscribeRoute,
+  UnfurlRoute: UnfurlRoute,
   AuthActionRoute: AuthActionRoute,
 }
 export const routeTree = rootRouteImport
