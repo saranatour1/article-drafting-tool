@@ -39,6 +39,7 @@ The Convex backend is a local, account-less deployment (`.env.local`). To move i
 - **Local-first:** `src/lib/drafts.ts`. Drafts live in a TanStack DB collection mirrored from `convex/drafts.ts`. Edits apply locally right away, then go through a durable IndexedDB outbox that replays to Convex after a reload or reconnect.
 - **Editor:** `src/components/editor.tsx` (TipTap + markdown); type `/` for blocks (`slash-command.tsx`).
 - **Platforms:** `src/lib/platforms.ts`. To add one, add an entry there and a `.preview-<id>` block in `src/styles.css`. "Copy markdown" puts markdown (for dev.to) and HTML (for Medium and X, which read rich text on paste) on the clipboard together.
+- **Link cards:** a bare link on its own line shows in the previews as the card X, Medium and Substack would embed. `src/routes/unfurl.ts` fetches the page's Open Graph tags (signed-in only) and `src/lib/link-preview.ts` reads them; copies keep the plain link so each site builds its own embed.
 
 ## Checks
 
